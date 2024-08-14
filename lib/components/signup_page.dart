@@ -1,11 +1,12 @@
-// ignore_for_file: avoid_print
-import 'dart:io';
-import 'package:email_validator/email_validator.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import 'dart:io';
+import 'package:email_validator/email_validator.dart';
 import 'package:ticeo/components/common/custom_form_button.dart';
 import 'package:ticeo/components/common/custom_input_field.dart';
 import 'package:ticeo/components/common/page_header_sing.dart';
@@ -24,6 +25,8 @@ class _SignupPageState extends State<SignupPage> {
   File? _profileImage;
 
   final _signupFormKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   Future _pickProfileImage() async {
     try {
@@ -35,6 +38,13 @@ class _SignupPageState extends State<SignupPage> {
     } on PlatformException catch (e) {
       debugPrint('Erreur lors de la recuperation d\'image: $e');
     }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -107,6 +117,7 @@ class _SignupPageState extends State<SignupPage> {
                         height: 16.h,
                       ),
                       CustomInputField(
+                          controller: _emailController,
                           labelText: 'Nom',
                           hintText: 'Entrer votre nom',
                           isDense: true,
@@ -120,6 +131,7 @@ class _SignupPageState extends State<SignupPage> {
                         height: 16.h,
                       ),
                       CustomInputField(
+                          controller: _emailController,
                           labelText: 'Email',
                           hintText: 'Entrer votre email',
                           isDense: true,
@@ -149,6 +161,7 @@ class _SignupPageState extends State<SignupPage> {
                         height: 16.h,
                       ),
                       CustomInputField(
+                        controller: _passwordController,
                         labelText: 'Mot de passe',
                         hintText: 'Créer un mot de passe',
                         isDense: true,
@@ -220,11 +233,40 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 
-  void _handleSignupUser() {
+  void _handleSignupUser() async {
     if (_signupFormKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Validation des données..')),
       );
+      try {
+        UserCredential userCredential =
+            await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Compte créé avec succès!')),
+        );
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'weak-password') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Le mot de passe est trop faible.')),
+          );
+        } else if (e.code == 'email-already-in-use') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Un compte existe déjà avec cet email.')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Erreur1: ${e.message}')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur2: ${e.toString()}')),
+        );
+      }
     }
   }
 }

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:ticeo/components/database_gest/database_helper.dart';
 import 'package:ticeo/components/state/provider_state.dart';
 import 'package:ticeo/home/home.dart';
-import 'package:ticeo/introduction_animation/introduction_animation_screen.dart';
-import 'package:audioplayers/audioplayers.dart';
 
 class ModeSelectionPage extends StatefulWidget {
   const ModeSelectionPage({super.key});
@@ -15,13 +15,23 @@ class ModeSelectionPage extends StatefulWidget {
 
 class _ModeSelectionPageState extends State<ModeSelectionPage> {
   final List<bool> _selections = List.generate(3, (_) => false);
-  static const platform = MethodChannel('accessibility_service');
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void initState() {
     super.initState();
-    _playWelcomeVoice();
+    _checkIfModePageSeen();
+  }
+
+  Future<void> _checkIfModePageSeen() async {
+    DatabaseHelper dbHelper = DatabaseHelper();
+
+    String? mode = await dbHelper.getPreference();
+    if (mode != null) {
+      _navigateToHomeScreen();
+    } else {
+      _playWelcomeVoice();
+    }
   }
 
   Future<void> _playWelcomeVoice() async {
@@ -32,42 +42,31 @@ class _ModeSelectionPageState extends State<ModeSelectionPage> {
     await _audioPlayer.stop();
   }
 
-  Future<void> _checkTalkBackStatus() async {
-    bool isTalkBackEnabled;
-    try {
-      final bool result = await platform.invokeMethod('isTalkBackEnabled');
-      isTalkBackEnabled = result;
-      if (!isTalkBackEnabled) {
-        _navigateToNextPage(); // Naviguer vers la page suivante
-        Future.delayed(const Duration(seconds: 1), () {
-          _requestTalkBackActivation(); // Ouvrir les paramètres après un délai
-        });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('TalkBack est déjà activé')),
-        );
-        _navigateToNextPage();
-      }
-    } on PlatformException catch (e) {
-      print("Erreur lors de la vérification de TalkBack: ${e.message}");
+  void _handleSelection() async {
+    String mode = '';
+
+    if (_selections[0] && _selections[1]) {
+      mode = 'largeAndTalk';
+    } else if (_selections[0]) {
+      mode = 'talkback';
+    } else if (_selections[1]) {
+      mode = 'largePolice';
+    } else {
+      mode = 'normal';
     }
+
+    // Enregistrez le mode sélectionné dans la base de données
+    DatabaseHelper dbHelper = DatabaseHelper();
+    await dbHelper.insertPreference(mode);
+
+    _navigateToHomeScreen();
   }
 
-  Future<void> _requestTalkBackActivation() async {
-    try {
-      await platform.invokeMethod('requestTalkBackActivation');
-    } on PlatformException catch (e) {
-      print("Erreur lors de la demande d'activation de TalkBack: ${e.message}");
-    }
-  }
-
-  void _navigateToNextPage() {
-    final modeProvider = Provider.of<ModeProvider>(context, listen: false);
+  void _navigateToHomeScreen() {
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            IntroductionAnimationScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) => HomeScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(1.0, 0.0);
           const end = Offset.zero;
@@ -78,29 +77,11 @@ class _ModeSelectionPageState extends State<ModeSelectionPage> {
           return SlideTransition(position: offsetAnimation, child: child);
         },
       ),
-    ).then((_) {
-      Navigator.pushReplacement(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => HomeScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            const begin = Offset(1.0, 0.0);
-            const end = Offset.zero;
-            const curve = Curves.easeInOut;
-            var tween =
-                Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-            var offsetAnimation = animation.drive(tween);
-            return SlideTransition(position: offsetAnimation, child: child);
-          },
-        ),
-      );
-    });
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final modeProvider = Provider.of<ModeProvider>(context);
-
     return Scaffold(
       backgroundColor: Colors.grey[200],
       body: Center(
@@ -122,11 +103,11 @@ class _ModeSelectionPageState extends State<ModeSelectionPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
+              const Text(
                 'Choix du mode d\'utilisation',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: modeProvider.isLargeTextMode ? 36.0 : 30.0,
+                  fontSize: 36.0,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -157,28 +138,19 @@ class _ModeSelectionPageState extends State<ModeSelectionPage> {
               const SizedBox(height: 10.0),
               const SizedBox(height: 20.0),
               ElevatedButton(
-                onPressed: () {
-                  if (_selections[0]) {
-                    _checkTalkBackStatus();
-                  } else {
-                    setState(() {
-                      modeProvider.setLargeTextMode(_selections[1]);
-                    });
-                    _navigateToNextPage();
-                  }
-                },
+                onPressed: _handleSelection,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey[800],
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                child: Padding(
+                child: const Padding(
                   padding: EdgeInsets.symmetric(vertical: 12.0),
                   child: Text(
                     'Suivant',
                     style: TextStyle(
-                      fontSize: modeProvider.isLargeTextMode ? 26.0 : 22.0,
+                      fontSize: 26,
                       color: Colors.white,
                     ),
                   ),

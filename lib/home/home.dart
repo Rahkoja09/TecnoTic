@@ -2,11 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:provider/provider.dart';
-import 'package:ticeo/components/state/provider_state.dart';
+import 'package:ticeo/components/database_gest/database_helper.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({Key? key}) : super(key: key);
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -17,6 +16,7 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _fadeAnimation;
+  bool _isLargeTextMode = false;
 
   @override
   void initState() {
@@ -40,18 +40,19 @@ class _HomeScreenState extends State<HomeScreen>
     ));
 
     _animationController.forward();
+
+    _loadPreferences();
   }
 
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
+  Future<void> _loadPreferences() async {
+    final mode = await DatabaseHelper().getPreference();
+    setState(() {
+      _isLargeTextMode = mode == 'large';
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final modeProvider = Provider.of<ModeProvider>(context);
-
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       body: LayoutBuilder(
@@ -61,10 +62,9 @@ class _HomeScreenState extends State<HomeScreen>
               SingleChildScrollView(
                 child: Column(
                   children: [
-                    SizedBox(
-                        height: modeProvider.isLargeTextMode ? 180.h : 140.h),
+                    SizedBox(height: _isLargeTextMode ? 180.h : 110.h),
                     buildAnimatedHeader(constraints),
-                    SizedBox(height: 36.h),
+                    SizedBox(height: 16.h),
                     buildCategoryRow(),
                     SizedBox(height: 16.h),
                     buildMentoratCard(),
@@ -80,10 +80,9 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget buildAnimatedHeader(BoxConstraints constraints) {
-    double headerFontSize =
-        Provider.of<ModeProvider>(context).isLargeTextMode ? 34.sp : 18.sp;
-    double ticeo =
-        Provider.of<ModeProvider>(context).isLargeTextMode ? 46.sp : 22.sp;
+    // Utilisez les préférences de texte récupérées pour déterminer la taille
+    double headerFontSize = _isLargeTextMode ? 34.sp : 16.sp;
+    double ticeoFontSize = _isLargeTextMode ? 46.sp : 26.sp;
 
     return SlideTransition(
       position: _slideAnimation,
@@ -91,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen>
         opacity: _fadeAnimation,
         child: SizedBox(
           width: constraints.maxWidth,
-          height: 200.h,
+          height: 150.h,
           child: Stack(
             children: [
               Positioned(
@@ -100,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen>
                 right: 16.w,
                 child: Container(
                   width: double.infinity,
-                  height: 200.h,
+                  height: 150.h,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(24.r),
                     boxShadow: [
@@ -112,11 +111,11 @@ class _HomeScreenState extends State<HomeScreen>
                     ],
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(24.r),
+                    borderRadius: BorderRadius.circular(5.r),
                     child: Image.asset(
                       'assets/design_course/cnfppsh.jpg',
                       width: double.infinity,
-                      height: 200.h,
+                      height: 100.h,
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -150,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen>
                         Text(
                           'TIC-eo',
                           style: TextStyle(
-                            fontSize: ticeo,
+                            fontSize: ticeoFontSize,
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                             shadows: [
@@ -180,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen>
       child: FadeTransition(
         opacity: _fadeAnimation,
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w),
+          padding: EdgeInsets.symmetric(horizontal: 10.w),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -207,10 +206,8 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget buildMentoratCard() {
-    double subHeaderFontSize =
-        Provider.of<ModeProvider>(context).isLargeTextMode ? 24.sp : 20.sp;
-    double simpleFontSize =
-        Provider.of<ModeProvider>(context).isLargeTextMode ? 26.sp : 16.sp;
+    double subHeaderFontSize = _isLargeTextMode ? 24.sp : 18.sp;
+    double simpleFontSize = _isLargeTextMode ? 26.sp : 14.sp;
 
     return SlideTransition(
       position: _slideAnimation,
@@ -220,7 +217,7 @@ class _HomeScreenState extends State<HomeScreen>
           padding: EdgeInsets.symmetric(horizontal: 16.w),
           child: Card(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24.r),
+              borderRadius: BorderRadius.circular(5.r),
             ),
             elevation: 5,
             child: Column(
@@ -228,10 +225,10 @@ class _HomeScreenState extends State<HomeScreen>
               children: [
                 SizedBox(
                   width: double.infinity,
-                  height: 200.h,
+                  height: 150.h,
                   child: ClipRRect(
                     borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(24.r),
+                      top: Radius.circular(5.r),
                     ),
                     child: Image.asset(
                       'assets/design_course/mentoring.jpg',
@@ -268,7 +265,7 @@ class _HomeScreenState extends State<HomeScreen>
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.r),
+                        borderRadius: BorderRadius.circular(5.r),
                       ),
                       minimumSize: Size(double.infinity, 50.h),
                       padding: EdgeInsets.symmetric(vertical: 12.h),
@@ -277,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen>
                     child: Text(
                       'Inscrivez en tant que mentor',
                       style: TextStyle(
-                        fontSize: simpleFontSize,
+                        fontSize: subHeaderFontSize,
                         color: Colors.white,
                       ),
                     ),
@@ -293,13 +290,11 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget buildAppBar() {
-    double buttonFontSize =
-        Provider.of<ModeProvider>(context).isLargeTextMode ? 26.sp : 16.sp;
-    double settings =
-        Provider.of<ModeProvider>(context).isLargeTextMode ? 32.r : 24.r;
+    double buttonFontSize = _isLargeTextMode ? 26.sp : 16.sp;
+    double settings = _isLargeTextMode ? 32.r : 24.r;
 
     return Positioned(
-      top: 56.h,
+      top: 40.h,
       left: 0.w,
       right: 0.w,
       child: SlideTransition(
@@ -369,14 +364,10 @@ class _HomeScreenState extends State<HomeScreen>
     required String label,
     required VoidCallback onPressed,
   }) {
-    double buttonFontSize =
-        Provider.of<ModeProvider>(context).isLargeTextMode ? 18.sp : 12.sp;
-    double iconSize =
-        Provider.of<ModeProvider>(context).isLargeTextMode ? 34.w : 20.w;
-    double heighcard =
-        Provider.of<ModeProvider>(context).isLargeTextMode ? 84.sp : 60.sp;
-    double widthcard =
-        Provider.of<ModeProvider>(context).isLargeTextMode ? 124.sp : 100.sp;
+    double buttonFontSize = _isLargeTextMode ? 18.sp : 12.sp;
+    double iconSize = _isLargeTextMode ? 34.w : 20.w;
+    double heightCard = _isLargeTextMode ? 84.sp : 60.sp;
+    double widthCard = _isLargeTextMode ? 124.sp : 100.sp;
 
     return GestureDetector(
       onTap: onPressed,
@@ -387,8 +378,8 @@ class _HomeScreenState extends State<HomeScreen>
             child: FadeTransition(
               opacity: _fadeAnimation,
               child: Container(
-                width: widthcard,
-                height: heighcard,
+                width: widthCard,
+                height: heightCard,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12.r),
@@ -413,7 +404,7 @@ class _HomeScreenState extends State<HomeScreen>
                       Text(
                         label,
                         style: TextStyle(
-                          fontSize: buttonFontSize.sp,
+                          fontSize: buttonFontSize,
                           fontWeight: FontWeight.bold,
                           color: const Color.fromARGB(255, 46, 46, 46),
                         ),

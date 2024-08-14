@@ -2,7 +2,7 @@ plugins {
     id "com.android.application"
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
-    id 'com.google.gms.google-services'
+    id 'com.google.gms.google-services' version '4.3.13' apply false
 }
 
 def localProperties = new Properties()
@@ -46,16 +46,17 @@ android {
         applicationId "com.cnfppsh.ticeo"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdkVersion flutter.minSdkVersion
+        minSdkVersion 23
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+        multiDexEnabled true
     }
 
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // Signing with the debug keys for now, so flutter run --release works.
             signingConfig signingConfigs.debug
         }
     }
@@ -66,6 +67,9 @@ flutter {
 }
 
 dependencies {
+    implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'com.google.firebase:firebase-auth:22.0.0'
     implementation 'com.google.firebase:firebase-firestore:24.0.0'
+    implementation platform('com.google.firebase:firebase-bom:33.1.2')
 }
+apply plugin: 'com.google.gms.google-services'

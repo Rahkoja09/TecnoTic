@@ -1,4 +1,4 @@
-package com.example.ticeo
+package com.cnfppsh.ticeo
 
 import android.content.Context
 import android.content.Intent
@@ -37,4 +37,3 @@ class MainActivity: FlutterActivity() {
         startActivity(intent)
     }
 }
-

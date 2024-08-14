@@ -1,3 +1,6 @@
+// ignore_for_file: use_build_context_synchronously, unused_local_variable
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -21,6 +24,8 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _loginFormKey = GlobalKey<FormState>();
 
   @override
@@ -52,25 +57,27 @@ class _LoginPageState extends State<LoginPage> {
                           title: 'Se connecter',
                         ),
                         CustomInputField(
-                            labelText: 'Email',
-                            hintText: 'Entrer votre email',
-                            validator: (textValue) {
-                              if (textValue == null || textValue.isEmpty) {
-                                return 'Il faut entrer votre email!';
-                              }
-                              if (!EmailValidator.validate(textValue)) {
-                                return 'Entrer une email valide';
-                              }
-                              return null;
-                            }),
-                        const SizedBox(
-                          height: 16,
+                          labelText: 'Email',
+                          hintText: 'Entrer votre email',
+                          controller:
+                              _emailController, // Ajoutez le contrôleur ici
+                          validator: (textValue) {
+                            if (textValue == null || textValue.isEmpty) {
+                              return 'Il faut entrer votre email!';
+                            }
+                            if (!EmailValidator.validate(textValue)) {
+                              return 'Entrer une email valide';
+                            }
+                            return null;
+                          },
                         ),
                         CustomInputField(
                           labelText: 'Mot de passe',
                           hintText: 'Entrer votre mot de passe',
                           obscureText: true,
                           suffixIcon: true,
+                          controller:
+                              _passwordController, // Ajoutez le contrôleur ici
                           validator: (textValue) {
                             if (textValue == null || textValue.isEmpty) {
                               return 'Il faut entrer un mot de passe!';
@@ -160,21 +167,30 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void _handleLoginUser() {
-    // login user
+  void _handleLoginUser() async {
     if (_loginFormKey.currentState!.validate()) {
-      // Afficher une snackbar pour la soumission des données
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Validation des données..')),
-      );
+      try {
+        UserCredential userCredential =
+            await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
 
-      // Naviguer vers la page HomePage
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) =>
-                GoogleBottomBar(isLargeTextMode: widget.isLargeTextMode)),
-      );
+        // Vérifiez si le widget est toujours monté avant de naviguer
+        if (!mounted) return;
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => GoogleBottomBar()),
+        );
+      } on FirebaseAuthException catch (e) {
+        // Vérifiez si le widget est toujours monté avant de montrer le SnackBar
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: ${e.message}')),
+        );
+      }
     }
   }
 }

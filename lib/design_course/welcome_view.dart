@@ -2,10 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:provider/provider.dart';
+import 'package:ticeo/components/database_gest/database_helper.dart';
 import 'package:ticeo/design_course/home_design_course.dart';
 import 'design_course_app_theme.dart';
-import 'package:ticeo/components/state/provider_state.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,6 +19,7 @@ class _HomePageState extends State<HomePage>
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _fadeAnimation;
+  bool _isLargeTextMode = false;
 
   @override
   void initState() {
@@ -47,6 +47,14 @@ class _HomePageState extends State<HomePage>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _animationController.forward();
+      _loadPreferences();
+    });
+  }
+
+  Future<void> _loadPreferences() async {
+    final mode = await DatabaseHelper().getPreference();
+    setState(() {
+      _isLargeTextMode = mode == 'large';
     });
   }
 
@@ -123,8 +131,7 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget getStartButtonUI() {
-    final textSizeProvider = Provider.of<ModeProvider>(context);
-    double buttonFontSize = textSizeProvider.isLargeTextMode ? 30.sp : 22.sp;
+    double buttonFontSize = _isLargeTextMode ? 30.sp : 22.sp;
 
     return Padding(
       padding: const EdgeInsets.all(18.0),
@@ -157,9 +164,8 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget getAppBarUI() {
-    final textSizeProvider = Provider.of<ModeProvider>(context);
-    double titleFontSize = textSizeProvider.isLargeTextMode ? 32.sp : 26.sp;
-    double subtitleFontSize = textSizeProvider.isLargeTextMode ? 18.sp : 16.sp;
+    double titleFontSize = _isLargeTextMode ? 32.sp : 26.sp;
+    double subtitleFontSize = _isLargeTextMode ? 18.sp : 16.sp;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 18.0),
@@ -190,10 +196,8 @@ class _HomePageState extends State<HomePage>
 
   Widget _buildAnimatedInfoCard(String title, String description, Color color,
       String backgroundImagePath) {
-    final textSizeProvider = Provider.of<ModeProvider>(context);
-    double cardTitleFontSize = textSizeProvider.isLargeTextMode ? 34.sp : 20.sp;
-    double cardDescriptionFontSize =
-        textSizeProvider.isLargeTextMode ? 28.sp : 16.sp;
+    double cardTitleFontSize = _isLargeTextMode ? 34.sp : 20.sp;
+    double cardDescriptionFontSize = _isLargeTextMode ? 28.sp : 16.sp;
 
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -234,7 +238,7 @@ class _HomePageState extends State<HomePage>
                       style: TextStyle(
                         fontSize: cardTitleFontSize,
                         fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 255, 255, 255),
+                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 8.0),

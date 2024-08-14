@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
+import 'package:ticeo/components/database_gest/database_helper.dart';
 import 'package:ticeo/home/home.dart';
 import 'package:ticeo/design_course/welcome_view.dart';
 
 class GoogleBottomBar extends StatefulWidget {
-  const GoogleBottomBar({super.key, required this.isLargeTextMode});
-  final bool isLargeTextMode; // Déclaration du champ
+  const GoogleBottomBar({super.key});
 
   @override
   State<GoogleBottomBar> createState() => _GoogleBottomBarState();
@@ -18,7 +18,17 @@ class _GoogleBottomBarState extends State<GoogleBottomBar> {
   @override
   void initState() {
     super.initState();
-    isLargeTextMode = widget.isLargeTextMode; // Assigner la valeur reçue
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    DatabaseHelper dbHelper = DatabaseHelper();
+    String? mode = await dbHelper.getPreference();
+
+    // Déterminez si le mode est "grand police"
+    setState(() {
+      isLargeTextMode = mode == 'largePolice' || mode == 'largeAndTalk';
+    });
   }
 
   @override
@@ -70,8 +80,8 @@ final _navBarItems = [
     selectedColor: const Color.fromARGB(255, 26, 122, 191),
   ),
   SalomonBottomBarItem(
-    icon: const Icon(Icons.person),
-    title: const Text("Profil"),
+    icon: const Icon(Icons.settings),
+    title: const Text("Paramettre"),
     selectedColor: const Color.fromARGB(255, 26, 122, 191),
   ),
 ];

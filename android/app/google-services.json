@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "370927108862",
+    "project_id": "ticeo-cm",
+    "storage_bucket": "ticeo-cm.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:370927108862:android:55386683ee30d4f84adbaf",
+        "android_client_info": {
+          "package_name": "com.cnfppsh.ticeo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCloGwb_sdcR_31nZP5oiiswZNC0Lyp61k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
