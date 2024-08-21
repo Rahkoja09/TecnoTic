@@ -1,8 +1,11 @@
 // ignore_for_file: library_private_types_in_public_api
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ticeo/components/database_gest/database_helper.dart';
+import 'package:ticeo/design_course/welcome_view.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -16,7 +19,33 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _fadeAnimation;
+  late PageController _pageController;
+  Timer? _timer;
   bool _isLargeTextMode = false;
+
+  final List<Map<String, String>> _imagesWithText = [
+    {
+      'image': 'assets/design_course/bureau.jpg',
+      'title': 'Ensemble avec votre application',
+      'subtitle': 'TIC-eo',
+    },
+    {
+      'image': 'assets/design_course/cours.jpg',
+      'title': 'Cours',
+      'subtitle': 'Adapter pour vous',
+    },
+    {
+      'image': 'assets/design_course/mentoring.png',
+      'title': 'Mentorat',
+      'subtitle': 'De votre meilleur coach',
+    },
+    {
+      'image': 'assets/design_course/planing.jpg',
+      'title': 'Planning',
+      'subtitle': 'Avec votre propre rithme',
+    },
+    // Ajoutez d'autres images avec leurs textes ici
+  ];
 
   @override
   void initState() {
@@ -41,20 +70,43 @@ class _HomeScreenState extends State<HomeScreen>
 
     _animationController.forward();
 
+    _pageController = PageController();
+
+    _timer = Timer.periodic(Duration(seconds: 4), (timer) {
+      if (_pageController.hasClients) {
+        int nextPage =
+            (_pageController.page!.toInt() + 1) % _imagesWithText.length;
+        _pageController.animateToPage(
+          nextPage,
+          duration: Duration(milliseconds: 600),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+
     _loadPreferences();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _pageController.dispose();
+    _timer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadPreferences() async {
     final mode = await DatabaseHelper().getPreference();
     setState(() {
-      _isLargeTextMode = mode == 'large';
+      _isLargeTextMode = mode == 'largePolice';
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    ScreenUtil.init(context, designSize: const Size(360, 690));
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+      backgroundColor: Color.fromARGB(255, 243, 249, 252),
       body: LayoutBuilder(
         builder: (context, constraints) {
           return Stack(
@@ -80,93 +132,87 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget buildAnimatedHeader(BoxConstraints constraints) {
-    // Utilisez les préférences de texte récupérées pour déterminer la taille
-    double headerFontSize = _isLargeTextMode ? 34.sp : 16.sp;
-    double ticeoFontSize = _isLargeTextMode ? 46.sp : 26.sp;
+    double headerFontSize = _isLargeTextMode ? 34.sp : 20.sp;
+    double ticeoFontSize = _isLargeTextMode ? 46.sp : 30.sp;
 
     return SlideTransition(
       position: _slideAnimation,
       child: FadeTransition(
         opacity: _fadeAnimation,
-        child: SizedBox(
-          width: constraints.maxWidth,
-          height: 150.h,
-          child: Stack(
-            children: [
-              Positioned(
-                top: 0,
-                left: 16.w,
-                right: 16.w,
-                child: Container(
-                  width: double.infinity,
-                  height: 150.h,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 10.r,
-                        offset: Offset(0, 6.h),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
+          child: SizedBox(
+            width: constraints.maxWidth,
+            height: 150.h,
+            child: PageView.builder(
+              controller: _pageController,
+              itemCount: _imagesWithText.length,
+              itemBuilder: (context, index) {
+                final imageWithText = _imagesWithText[index];
+                return Stack(
+                  children: [
+                    Positioned(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(5.r),
+                        child: Image.asset(
+                          imageWithText['image']!,
+                          width: double.infinity,
+                          height: 150.h,
+                          fit: BoxFit.cover,
+                        ),
                       ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(5.r),
-                    child: Image.asset(
-                      'assets/design_course/cnfppsh.jpg',
-                      width: double.infinity,
-                      height: 100.h,
-                      fit: BoxFit.cover,
                     ),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 16.h,
-                left: 32.w,
-                child: SlideTransition(
-                  position: _slideAnimation,
-                  child: FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Fahalalana hoan\'ny rehetra',
-                          style: TextStyle(
-                            fontSize: headerFontSize,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            shadows: [
-                              Shadow(
-                                offset: Offset(0, 1.h),
-                                blurRadius: 2.r,
-                                color: Colors.black.withOpacity(0.5),
+                    Positioned(
+                      top: 16.h,
+                      left: 16.w,
+                      child: SlideTransition(
+                        position: _slideAnimation,
+                        child: FadeTransition(
+                          opacity: _fadeAnimation,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                imageWithText['title']!,
+                                style: TextStyle(
+                                  fontSize: headerFontSize,
+                                  // fontFamily: 'DotGothic',
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  shadows: [
+                                    Shadow(
+                                      offset: Offset(0, 1.h),
+                                      blurRadius: 2.r,
+                                      color: Colors.black.withOpacity(0.5),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Text(
+                                imageWithText['subtitle']!,
+                                style: TextStyle(
+                                  fontSize: ticeoFontSize,
+                                  fontFamily: 'Jersey',
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  shadows: [
+                                    Shadow(
+                                      offset: Offset(0, 1.h),
+                                      blurRadius: 2.r,
+                                      color: Colors.black.withOpacity(0.5),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
                         ),
-                        Text(
-                          'TIC-eo',
-                          style: TextStyle(
-                            fontSize: ticeoFontSize,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            shadows: [
-                              Shadow(
-                                offset: Offset(0, 1.h),
-                                blurRadius: 2.r,
-                                color: Colors.black.withOpacity(0.5),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-              ),
-            ],
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -186,7 +232,14 @@ class _HomeScreenState extends State<HomeScreen>
               buildCategoryButton(
                 icon: Icons.menu_book_rounded,
                 label: 'Cours',
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const HomePage(),
+                    ),
+                  );
+                },
               ),
               buildCategoryButton(
                 icon: Icons.group,
@@ -206,7 +259,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget buildMentoratCard() {
-    double subHeaderFontSize = _isLargeTextMode ? 24.sp : 18.sp;
+    double subHeaderFontSize = _isLargeTextMode ? 24.sp : 24.sp;
     double simpleFontSize = _isLargeTextMode ? 26.sp : 14.sp;
 
     return SlideTransition(
@@ -219,7 +272,7 @@ class _HomeScreenState extends State<HomeScreen>
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(5.r),
             ),
-            elevation: 5,
+            elevation: 0,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -244,7 +297,8 @@ class _HomeScreenState extends State<HomeScreen>
                     'Mentorat',
                     style: TextStyle(
                       fontSize: subHeaderFontSize,
-                      fontWeight: FontWeight.bold,
+                      // fontFamily: 'DotGothic',
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
@@ -275,6 +329,7 @@ class _HomeScreenState extends State<HomeScreen>
                       'Inscrivez en tant que mentor',
                       style: TextStyle(
                         fontSize: subHeaderFontSize,
+                        fontFamily: 'Jersey',
                         color: Colors.white,
                       ),
                     ),
@@ -292,9 +347,10 @@ class _HomeScreenState extends State<HomeScreen>
   Widget buildAppBar() {
     double buttonFontSize = _isLargeTextMode ? 26.sp : 16.sp;
     double settings = _isLargeTextMode ? 32.r : 24.r;
+    double TICEO = _isLargeTextMode ? 26.r : 30.r;
 
     return Positioned(
-      top: 40.h,
+      top: 45.h,
       left: 0.w,
       right: 0.w,
       child: SlideTransition(
@@ -302,10 +358,13 @@ class _HomeScreenState extends State<HomeScreen>
         child: FadeTransition(
           opacity: _fadeAnimation,
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
             decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 248, 248, 248),
-              borderRadius: BorderRadius.circular(0.r),
+              color: Color.fromARGB(39, 91, 153, 194),
+              border: Border.all(
+                color: Color.fromARGB(255, 203, 203, 203),
+              ),
+              borderRadius: BorderRadius.all(Radius.circular(5.0.r)),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black12,
@@ -316,40 +375,50 @@ class _HomeScreenState extends State<HomeScreen>
             ),
             child: Row(
               children: [
-                CircleAvatar(
-                  backgroundImage:
-                      const AssetImage('assets/design_course/pdp.jpg'),
-                  radius: 24.r,
+                IconButton(
+                  icon: Icon(Icons.menu,
+                      color: Color.fromARGB(255, 99, 99, 99), size: settings),
+                  onPressed: () {},
+                  tooltip: 'Menu et paramettrage',
                 ),
-                SizedBox(width: 16.w),
+                SizedBox(
+                  width: 10.0.h,
+                ),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Bonjour!',
+                        'TIC-eo',
                         style: TextStyle(
-                          fontSize: buttonFontSize,
+                          fontSize: TICEO,
+                          fontFamily: 'Jersey',
                           fontWeight: FontWeight.w500,
-                          color: const Color.fromARGB(255, 58, 89, 223),
+                          color: Color.fromARGB(255, 88, 88, 88),
                         ),
                       ),
-                      Text(
-                        'Fanevaniaina Koja',
-                        style: TextStyle(
-                          fontSize: buttonFontSize,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
+                      // Text(
+                      //   'Fanevaniaina Koja',
+                      //   style: TextStyle(
+                      //     fontSize: buttonFontSize,
+                      //     fontWeight: FontWeight.bold,
+                      //     color: Color.fromARGB(255, 125, 125, 125),
+                      //   ),
+                      // ),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon:
-                      Icon(Icons.settings, color: Colors.grey, size: settings),
+                  icon: Icon(Icons.notifications_none,
+                      color: const Color.fromARGB(255, 122, 122, 122),
+                      size: settings),
                   onPressed: () {},
                   tooltip: 'paramettrage des informations de votre compte',
+                ),
+                CircleAvatar(
+                  backgroundImage:
+                      const AssetImage('assets/design_course/pdp.jpg'),
+                  radius: 16.r,
                 ),
               ],
             ),
@@ -382,14 +451,15 @@ class _HomeScreenState extends State<HomeScreen>
                 height: heightCard,
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 8.r,
-                      offset: Offset(0, 4.h),
-                    ),
-                  ],
+                  border: Border.all(color: Color.fromARGB(255, 255, 255, 255)),
+                  borderRadius: BorderRadius.circular(5.r),
+                  // boxShadow: [
+                  //   BoxShadow(
+                  //     color: Colors.black12,
+                  //     blurRadius: 8.r,
+                  //     offset: Offset(0, 4.h),
+                  //   ),
+                  // ],
                 ),
                 child: Center(
                   child: Column(

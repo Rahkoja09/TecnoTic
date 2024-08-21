@@ -47,6 +47,8 @@ dependencies:
   shared_preferences: ^2.0.15
   image_picker: ^0.8.5+3
   intl: ^0.19.0
+  google_fonts: ^4.0.4
+  device_preview: ^1.2.0
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -70,6 +72,7 @@ dev_dependencies:
 flutter:
   assets:
       - assets/sounds/select_tap.wav
+      - assets/images/deffault_profil.jpg
       - assets/sounds/assistance_bienvenue.aac
       - assets/sounds/del.mp3
       - assets/sounds/add.mp3
@@ -95,22 +98,15 @@ flutter:
               - asset: assets/fonts/Roboto-Regular.ttf
               - asset: assets/fonts/Roboto-Medium.ttf
                 weight: 400
-  # fonts:
-  #       - family: WorkSans
-  #         fonts:
-  #             - asset: assets/fonts/WorkSans-Regular.ttf
-  #             - asset: assets/fonts/WorkSans-Medium.ttf
-  #               weight: 500
-  #             - asset: assets/fonts/WorkSans-SemiBold.ttf
-  #               weight: 600
-  #             - asset: assets/fonts/WorkSans-Bold.ttf
-  #               weight: 700
-  #       - family: Roboto
-  #         fonts:
-  #             - asset: assets/fonts/Roboto-Bold.ttf
-  #             - asset: assets/fonts/Roboto-Regular.ttf
-  #             - asset: assets/fonts/Roboto-Medium.ttf
-  #               weight: 400
+        - family: DotGothic
+          fonts:
+              - asset: assets/fonts/DotGothic16-Regular.ttf
+                weight: 400
+        - family: Jersey
+          fonts:
+              - asset: assets/fonts/Jersey10-Regular.ttf
+                weight: 400
+              
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

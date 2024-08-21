@@ -3,6 +3,8 @@ import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
 import 'package:ticeo/components/database_gest/database_helper.dart';
 import 'package:ticeo/home/home.dart';
 import 'package:ticeo/design_course/welcome_view.dart';
+import 'package:ticeo/mentoring/mentoring_home.dart';
+import 'package:ticeo/settings/settingsHome.dart';
 
 class GoogleBottomBar extends StatefulWidget {
   const GoogleBottomBar({super.key});
@@ -18,6 +20,7 @@ class _GoogleBottomBarState extends State<GoogleBottomBar> {
   @override
   void initState() {
     super.initState();
+    isLargeTextMode = false;
     _loadPreferences();
   }
 
@@ -25,37 +28,35 @@ class _GoogleBottomBarState extends State<GoogleBottomBar> {
     DatabaseHelper dbHelper = DatabaseHelper();
     String? mode = await dbHelper.getPreference();
 
-    // Déterminez si le mode est "grand police"
     setState(() {
-      isLargeTextMode = mode == 'largePolice' || mode == 'largeAndTalk';
+      isLargeTextMode = mode == 'large' || mode == 'largeAndTalk';
+    });
+  }
+
+  void navigateTo(int index) {
+    setState(() {
+      _selectedIndex = index;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final List<Widget> screens = [
-      HomeScreen(), // Utiliser la valeur
+      const HomeScreen(),
       const HomePage(),
-      Container(
-        color: Colors.red,
-        child: const Center(child: Text("Mentorat")),
-      ),
-      Container(
-        color: Colors.green,
-        child: const Center(child: Text("Profil")),
-      ),
+      MentoringHomePage(),
+      SettingsPage(),
     ];
 
     return Scaffold(
       body: screens[_selectedIndex],
+      backgroundColor: Color.fromARGB(255, 255, 255, 255),
       bottomNavigationBar: SalomonBottomBar(
         currentIndex: _selectedIndex,
         selectedItemColor: const Color(0xff6200ee),
-        unselectedItemColor: const Color(0xff757575),
+        unselectedItemColor: const Color.fromARGB(255, 247, 247, 247),
         onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
+          navigateTo(index);
         },
         items: _navBarItems,
       ),
@@ -65,23 +66,28 @@ class _GoogleBottomBarState extends State<GoogleBottomBar> {
 
 final _navBarItems = [
   SalomonBottomBarItem(
-    icon: const Icon(Icons.home_rounded),
+    icon: const Icon(Icons.home_rounded,
+        color: Color.fromARGB(255, 91, 153, 194)),
     title: const Text("Accueil"),
-    selectedColor: const Color.fromARGB(255, 26, 122, 191),
+    selectedColor: Color.fromARGB(255, 106, 106, 106),
   ),
   SalomonBottomBarItem(
-    icon: const Icon(Icons.book_rounded),
+    icon: const Icon(
+      Icons.book_rounded,
+      color: Color.fromARGB(255, 91, 153, 194),
+    ),
     title: const Text("Cours"),
-    selectedColor: const Color.fromARGB(255, 26, 122, 191),
+    selectedColor: const Color.fromARGB(255, 106, 106, 106),
   ),
   SalomonBottomBarItem(
-    icon: const Icon(Icons.person_pin),
+    icon:
+        const Icon(Icons.person_pin, color: Color.fromARGB(255, 91, 153, 194)),
     title: const Text("Mentorat"),
-    selectedColor: const Color.fromARGB(255, 26, 122, 191),
+    selectedColor: const Color.fromARGB(255, 106, 106, 106),
   ),
   SalomonBottomBarItem(
-    icon: const Icon(Icons.settings),
+    icon: const Icon(Icons.today, color: Color.fromARGB(255, 91, 153, 194)),
     title: const Text("Paramettre"),
-    selectedColor: const Color.fromARGB(255, 26, 122, 191),
+    selectedColor: const Color.fromARGB(255, 106, 106, 106),
   ),
 ];

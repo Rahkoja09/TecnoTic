@@ -5,6 +5,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:ticeo/components/database_gest/database_helper.dart';
 import 'package:ticeo/components/state/provider_state.dart';
 import 'package:ticeo/home/home.dart';
+import 'package:ticeo/introduction_animation/introduction_animation_screen.dart';
 
 class ModeSelectionPage extends StatefulWidget {
   const ModeSelectionPage({super.key});
@@ -66,7 +67,8 @@ class _ModeSelectionPageState extends State<ModeSelectionPage> {
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => HomeScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            IntroductionAnimationScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(1.0, 0.0);
           const end = Offset.zero;

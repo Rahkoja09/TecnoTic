@@ -1,6 +1,7 @@
 // ignore_for_file: library_private_types_in_public_api
 
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ticeo/design_course/category_list_view.dart';
 import 'package:ticeo/design_course/course_info_screen.dart';
 import 'package:ticeo/design_course/popular_course_list_view.dart';
@@ -17,6 +18,7 @@ class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ScreenUtil.init(context, designSize: const Size(360, 690));
     return Container(
       color: DesignCourseAppTheme.nearlyWhite,
       child: Scaffold(
@@ -54,42 +56,43 @@ class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        const Padding(
-          padding: EdgeInsets.only(top: 8.0, left: 18, right: 16),
+        Padding(
+          padding: EdgeInsets.only(top: 8.0.h, left: 18.0.w, right: 16.0.w),
           child: Text(
             'Modules/séances',
             textAlign: TextAlign.left,
             style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 22,
+              fontWeight: FontWeight.w500,
+              fontSize: 26.0.sp,
+              fontFamily: 'Jersey',
               letterSpacing: 0.27,
               color: DesignCourseAppTheme.darkerText,
             ),
           ),
         ),
-        const SizedBox(
-          height: 16,
+        SizedBox(
+          height: 16.0.h,
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 16, right: 16),
+          padding: EdgeInsets.only(left: 16.0.w, right: 16.0.w),
           child: Row(
             children: <Widget>[
               getButtonUI(CategoryType.ui, categoryType == CategoryType.ui),
-              const SizedBox(
-                width: 16,
+              SizedBox(
+                width: 16.0.w,
               ),
               getButtonUI(
                   CategoryType.coding, categoryType == CategoryType.coding),
-              const SizedBox(
-                width: 16,
+              SizedBox(
+                width: 16.0.w,
               ),
               getButtonUI(
                   CategoryType.basic, categoryType == CategoryType.basic),
             ],
           ),
         ),
-        const SizedBox(
-          height: 16,
+        SizedBox(
+          height: 16.0.h,
         ),
         CategoryListView(
           callBack: () {
@@ -102,17 +105,18 @@ class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
 
   Widget getPopularCourseUI() {
     return Padding(
-      padding: const EdgeInsets.only(top: 8.0, left: 18, right: 16),
+      padding: EdgeInsets.only(top: 8.0.h, left: 18.0.w, right: 16.0.w),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const Text(
+          Text(
             'Modules Permetic A',
             textAlign: TextAlign.left,
             style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 22,
+              fontWeight: FontWeight.w500,
+              fontSize: 26.0.sp,
+              fontFamily: 'Jersey',
               letterSpacing: 0.27,
               color: DesignCourseAppTheme.darkerText,
             ),
@@ -153,28 +157,28 @@ class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
             color: isSelected
                 ? DesignCourseAppTheme.nearlyBlue
                 : DesignCourseAppTheme.nearlyWhite,
-            borderRadius: const BorderRadius.all(Radius.circular(24.0)),
+            borderRadius: BorderRadius.all(Radius.circular(24.0.sp)),
             border: Border.all(color: DesignCourseAppTheme.nearlyBlue)),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             splashColor: Colors.white24,
-            borderRadius: const BorderRadius.all(Radius.circular(24.0)),
+            borderRadius: BorderRadius.all(Radius.circular(24.0.sp)),
             onTap: () {
               setState(() {
                 categoryType = categoryTypeData;
               });
             },
             child: Padding(
-              padding: const EdgeInsets.only(
-                  top: 12, bottom: 12, left: 18, right: 18),
+              padding: EdgeInsets.only(
+                  top: 12.h, bottom: 12.h, left: 18.w, right: 18.w),
               child: Center(
                 child: Text(
                   txt,
                   textAlign: TextAlign.left,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    fontSize: 12,
+                    fontSize: 12.sp,
                     letterSpacing: 0.27,
                     color: isSelected
                         ? DesignCourseAppTheme.nearlyWhite
@@ -191,64 +195,64 @@ class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
 
   Widget getSearchBarUI() {
     return Padding(
-      padding: const EdgeInsets.only(top: 8.0, left: 18),
+      padding: EdgeInsets.only(top: 8.0.h, left: 18.0.w),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           SizedBox(
             width: MediaQuery.of(context).size.width * 0.75,
-            height: 64,
+            height: 64.0.h,
             child: Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 8),
+              padding: EdgeInsets.only(top: 8.0.h, bottom: 8.0.h),
               child: Container(
-                decoration: const BoxDecoration(
-                  color: Color.fromARGB(14, 41, 41, 41),
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(14, 41, 41, 41),
                   borderRadius: BorderRadius.only(
-                    bottomRight: Radius.circular(13.0),
-                    bottomLeft: Radius.circular(13.0),
-                    topLeft: Radius.circular(13.0),
-                    topRight: Radius.circular(13.0),
+                    bottomRight: Radius.circular(13.0.r),
+                    bottomLeft: Radius.circular(13.0.r),
+                    topLeft: Radius.circular(13.0.r),
+                    topRight: Radius.circular(13.0.r),
                   ),
                 ),
                 child: Row(
                   children: <Widget>[
                     Expanded(
                       child: Container(
-                        padding: const EdgeInsets.only(left: 16, right: 16),
+                        padding: EdgeInsets.only(left: 16.0.w, right: 16.0.w),
                         child: TextFormField(
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'WorkSans',
                             fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: Color.fromARGB(170, 60, 59, 59),
+                            fontSize: 16.0.sp,
+                            color: const Color.fromARGB(170, 60, 59, 59),
                           ),
                           keyboardType: TextInputType.text,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'Rechercher vos cours',
                             border: InputBorder.none,
                             helperStyle: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: Color.fromARGB(255, 22, 190, 28),
+                              fontSize: 16.0.sp,
+                              color: const Color.fromARGB(255, 22, 190, 28),
                             ),
                             labelStyle: TextStyle(
                               fontWeight: FontWeight.w600,
-                              fontSize: 16,
+                              fontSize: 16.0.sp,
                               letterSpacing: 0.2,
-                              color: Color.fromARGB(72, 146, 146, 146),
+                              color: const Color.fromARGB(72, 146, 146, 146),
                             ),
                           ),
                           onEditingComplete: () {},
                         ),
                       ),
                     ),
-                    const SizedBox(
-                      width: 60,
-                      height: 60,
+                    SizedBox(
+                      width: 60.0.w,
+                      height: 60.0.h,
                       child: Icon(
                         Icons.search,
-                        color: Color.fromARGB(255, 74, 74, 75),
+                        color: const Color.fromARGB(255, 74, 74, 75),
                       ),
                     )
                   ],
@@ -265,8 +269,8 @@ class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
   }
 
   Widget getAppBarUI() {
-    return const Padding(
-      padding: EdgeInsets.only(top: 8.0, left: 18, right: 18),
+    return Padding(
+      padding: EdgeInsets.only(top: 8.0.h, left: 18.0.w, right: 18.0.w),
       child: Row(
         children: <Widget>[
           Expanded(
@@ -279,7 +283,8 @@ class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
                   textAlign: TextAlign.left,
                   style: TextStyle(
                     fontWeight: FontWeight.w400,
-                    fontSize: 14,
+                    fontSize: 18.0.sp,
+                    fontFamily: 'Jersey',
                     letterSpacing: 0.2,
                     color: DesignCourseAppTheme.grey,
                   ),
@@ -288,8 +293,9 @@ class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
                   'Cours et mentorat de TIC-eo',
                   textAlign: TextAlign.left,
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 22,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 26.0.sp,
+                    fontFamily: 'Jersey',
                     letterSpacing: 0.27,
                     color: DesignCourseAppTheme.darkerText,
                   ),
@@ -298,7 +304,7 @@ class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
             ),
           ),
           CircleAvatar(
-            radius: 30,
+            radius: 30.0.r,
             backgroundImage: AssetImage('assets/design_course/pdp.jpg'),
           )
         ],

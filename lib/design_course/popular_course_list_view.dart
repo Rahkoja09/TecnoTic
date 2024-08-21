@@ -1,5 +1,3 @@
-// ignore_for_file: library_private_types_in_public_api, avoid_unnecessary_containers
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ticeo/design_course/design_course_app_theme.dart';
@@ -17,6 +15,7 @@ class PopularCourseListView extends StatefulWidget {
 class _PopularCourseListViewState extends State<PopularCourseListView>
     with TickerProviderStateMixin {
   late AnimationController animationController;
+  late Future<void> _fetchData; // Déclaration du Future
 
   @override
   void initState() {
@@ -25,22 +24,26 @@ class _PopularCourseListViewState extends State<PopularCourseListView>
       duration: const Duration(milliseconds: 400),
       vsync: this,
     );
+    _fetchData = _loadData(); // Initialisation du Future
   }
 
-  Future<bool> getData() async {
-    await Future<dynamic>.delayed(const Duration(milliseconds: 200));
-    return true;
+  Future<void> _loadData() async {
+    final category = Category();
+    await category.fetchPopularCourses();
+    setState(() {}); // Met à jour l'état pour reconstruire le widget
   }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 8),
-      child: FutureBuilder<bool>(
-        future: getData(),
-        builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
-          if (!snapshot.hasData) {
-            return const SizedBox();
+      child: FutureBuilder<void>(
+        future: _fetchData,
+        builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Erreur: ${snapshot.error}'));
           } else {
             return GridView.builder(
               padding: const EdgeInsets.all(8),
@@ -48,8 +51,8 @@ class _PopularCourseListViewState extends State<PopularCourseListView>
               scrollDirection: Axis.vertical,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                mainAxisSpacing: 32.0,
-                crossAxisSpacing: 32.0,
+                mainAxisSpacing: 28.0,
+                crossAxisSpacing: 28.0,
                 childAspectRatio: 0.8,
               ),
               itemCount: Category.popularCourseList.length,
@@ -135,7 +138,7 @@ class CategoryView extends StatelessWidget {
                                     textAlign: TextAlign.left,
                                     style: TextStyle(
                                       fontWeight: FontWeight.w600,
-                                      fontSize: 16.sp,
+                                      fontSize: 14.sp,
                                       letterSpacing: 0.27,
                                       color: DesignCourseAppTheme.darkerText,
                                     ),
@@ -151,7 +154,7 @@ class CategoryView extends StatelessWidget {
                                         CrossAxisAlignment.center,
                                     children: <Widget>[
                                       Text(
-                                        '${category!.lessonCount} Leçons',
+                                        '${category!.lessonCount} Séances',
                                         textAlign: TextAlign.left,
                                         style: TextStyle(
                                           fontWeight: FontWeight.w200,
@@ -172,7 +175,7 @@ class CategoryView extends StatelessWidget {
                     ),
                     Padding(
                       padding:
-                          const EdgeInsets.only(top: 24, right: 16, left: 16),
+                          const EdgeInsets.only(top: 20, right: 18, left: 18),
                       child: Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(16.0),

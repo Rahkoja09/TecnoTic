@@ -1,16 +1,15 @@
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
-
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ticeo/components/common/custom_form_button.dart';
 import 'package:ticeo/components/common/custom_input_field.dart';
 import 'package:ticeo/components/common/page_header.dart';
 import 'package:ticeo/components/common/page_heading.dart';
 import 'package:ticeo/components/login_page.dart';
+import 'package:ticeo/components/database_gest/database_helper.dart';
 
 class ForgetPasswordPage extends StatefulWidget {
-  final bool isLargeTextMode; // Ajoute cette ligne
-
-  const ForgetPasswordPage({super.key, required this.isLargeTextMode});
+  const ForgetPasswordPage({super.key});
 
   @override
   State<ForgetPasswordPage> createState() => _ForgetPasswordPageState();
@@ -18,6 +17,20 @@ class ForgetPasswordPage extends StatefulWidget {
 
 class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
   final _forgetPasswordFormKey = GlobalKey<FormState>();
+  double _textSize = 18.sp; // Default text size
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    final mode = await DatabaseHelper().getPreference();
+    setState(() {
+      _textSize = mode == 'large' ? 20.sp : 18.sp;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,32 +69,32 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                               }
                               return null;
                             }),
-                        const SizedBox(
-                          height: 20,
+                        SizedBox(
+                          height: 20.h,
                         ),
                         CustomFormButton(
                           innerText: 'Récuperer',
                           onPressed: _handleForgetPassword,
                         ),
-                        const SizedBox(
-                          height: 20,
+                        SizedBox(
+                          height: 20.h,
                         ),
                         Container(
                           alignment: Alignment.center,
                           child: GestureDetector(
-                            onTap: () => {
+                            onTap: () {
                               Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => LoginPage(
-                                          isLargeTextMode:
-                                              widget.isLargeTextMode)))
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => LoginPage(),
+                                ),
+                              );
                             },
-                            child: const Text(
+                            child: Text(
                               'Retour au page de connexion',
                               style: TextStyle(
-                                fontSize: 13,
-                                color: Color(0xff939393),
+                                fontSize: _textSize,
+                                color: const Color(0xff939393),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),

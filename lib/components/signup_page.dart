@@ -1,21 +1,21 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
-import 'dart:io';
 import 'package:email_validator/email_validator.dart';
 import 'package:ticeo/components/common/custom_form_button.dart';
 import 'package:ticeo/components/common/custom_input_field.dart';
 import 'package:ticeo/components/common/page_header_sing.dart';
 import 'package:ticeo/components/common/page_heading.dart';
 import 'package:ticeo/components/login_page.dart';
-import 'package:ticeo/components/state/provider_state.dart';
+import 'package:ticeo/components/database_gest/database_helper.dart';
+import 'dart:io';
 
 class SignupPage extends StatefulWidget {
-  const SignupPage({super.key, required bool isLargeTextMode});
+  const SignupPage({super.key});
 
   @override
   State<SignupPage> createState() => _SignupPageState();
@@ -23,10 +23,20 @@ class SignupPage extends StatefulWidget {
 
 class _SignupPageState extends State<SignupPage> {
   File? _profileImage;
+  double _textSize = 18.sp;
 
   final _signupFormKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _contactController = TextEditingController();
+
+  Future<void> _loadPreferences() async {
+    final mode = await DatabaseHelper().getPreference();
+    setState(() {
+      _textSize = mode == 'large' ? 20.sp : 18.sp;
+    });
+  }
 
   Future _pickProfileImage() async {
     try {
@@ -41,6 +51,12 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
@@ -49,9 +65,6 @@ class _SignupPageState extends State<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
-    final textSizeProvider = Provider.of<ModeProvider>(context);
-    double innerSize = textSizeProvider.isLargeTextMode ? 20.sp : 18.sp;
-
     return SafeArea(
       child: Scaffold(
         backgroundColor: const Color(0xffEEF1F3),
@@ -87,7 +100,7 @@ class _SignupPageState extends State<SignupPage> {
                                 bottom: 5.w,
                                 right: 5.w,
                                 child: GestureDetector(
-                                  onTap: _pickProfileImage, //_pickProfileImage,
+                                  onTap: _pickProfileImage,
                                   child: Container(
                                     height: 50.h,
                                     width: 50.w,
@@ -103,7 +116,7 @@ class _SignupPageState extends State<SignupPage> {
                                         color: Colors.white,
                                         size: 25.sp,
                                       ),
-                                      tooltip: 'importer un photo de profil',
+                                      tooltip: 'Importer une photo de profil',
                                       onPressed: _pickProfileImage,
                                     ),
                                   ),
@@ -117,13 +130,13 @@ class _SignupPageState extends State<SignupPage> {
                         height: 16.h,
                       ),
                       CustomInputField(
-                          controller: _emailController,
+                          controller: _nameController,
                           labelText: 'Nom',
                           hintText: 'Entrer votre nom',
                           isDense: true,
                           validator: (textValue) {
                             if (textValue == null || textValue.isEmpty) {
-                              return 'IL faut entrer un nom!';
+                              return 'Il faut entrer un nom!';
                             }
                             return null;
                           }),
@@ -137,10 +150,10 @@ class _SignupPageState extends State<SignupPage> {
                           isDense: true,
                           validator: (textValue) {
                             if (textValue == null || textValue.isEmpty) {
-                              return 'Il faut entrer une email!';
+                              return 'Il faut entrer un email!';
                             }
                             if (!EmailValidator.validate(textValue)) {
-                              return 'Entrer une email valide';
+                              return 'Entrer un email valide';
                             }
                             return null;
                           }),
@@ -148,6 +161,7 @@ class _SignupPageState extends State<SignupPage> {
                         height: 16.h,
                       ),
                       CustomInputField(
+                          controller: _contactController,
                           labelText: 'Contact',
                           hintText: 'Entrer votre contact',
                           isDense: true,
@@ -192,7 +206,7 @@ class _SignupPageState extends State<SignupPage> {
                             Text(
                               'Déjà un compte? ',
                               style: TextStyle(
-                                  fontSize: innerSize,
+                                  fontSize: _textSize,
                                   color: const Color(0xff939393),
                                   fontWeight: FontWeight.bold),
                             ),
@@ -201,17 +215,14 @@ class _SignupPageState extends State<SignupPage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => LoginPage(
-                                      isLargeTextMode:
-                                          textSizeProvider.isLargeTextMode,
-                                    ),
+                                    builder: (context) => const LoginPage(),
                                   ),
                                 );
                               },
                               child: Text(
                                 'Se connecter',
                                 style: TextStyle(
-                                    fontSize: innerSize,
+                                    fontSize: _textSize,
                                     color: const Color(0xff748288),
                                     fontWeight: FontWeight.bold),
                               ),
@@ -239,14 +250,32 @@ class _SignupPageState extends State<SignupPage> {
         const SnackBar(content: Text('Validation des données..')),
       );
       try {
+        // Création de l'utilisateur avec FirebaseAuth
         UserCredential userCredential =
             await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: _emailController.text,
           password: _passwordController.text,
         );
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Compte créé avec succès!')),
-        );
+
+        // Récupération de l'utilisateur
+        User? user = userCredential.user;
+
+        if (user != null) {
+          // Ajout des informations supplémentaires à Firestore
+          await FirebaseFirestore.instance
+              .collection('Utilisateurs')
+              .doc(user.uid)
+              .set({
+            'NomUtil': _nameController.text,
+            'EmailUtil': _emailController.text,
+            'TelUtil': _contactController.text,
+            'MdpUtil': _passwordController.text,
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Compte créé avec succès!')),
+          );
+        }
       } on FirebaseAuthException catch (e) {
         if (e.code == 'weak-password') {
           ScaffoldMessenger.of(context).showSnackBar(

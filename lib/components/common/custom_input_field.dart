@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:provider/provider.dart';
-import 'package:ticeo/components/state/provider_state.dart';
+import 'package:ticeo/components/database_gest/database_helper.dart';
 
 class CustomInputField extends StatefulWidget {
   final String labelText;
@@ -29,40 +28,57 @@ class CustomInputField extends StatefulWidget {
 
 class _CustomInputFieldState extends State<CustomInputField> {
   bool _obscureText = true;
+  double _fontSize = 18.sp;
+  double _hintSize = 15.sp;
+  double _maxHeight = 33.sp;
+  double _paddingHorizontal = 15.w;
+  double _paddingVertical = 3.h;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    final mode = await DatabaseHelper().getPreference();
+    setState(() {
+      _fontSize = mode == 'large' ? 24.sp : 18.sp;
+      _hintSize = mode == 'large' ? 24.sp : 15.sp;
+      _maxHeight = mode == 'large' ? 44.sp : 33.sp;
+      _paddingHorizontal = mode == 'large' ? 22.w : 15.w;
+      _paddingVertical = mode == 'large' ? 12.h : 3.h;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    // provider
-    final textSizeProvider = Provider.of<ModeProvider>(context);
-    double fontSize = textSizeProvider.isLargeTextMode ? 24.sp : 18.sp;
-    double maxHeight = textSizeProvider.isLargeTextMode ? 44.sp : 33.sp;
-    double hintsize = textSizeProvider.isLargeTextMode ? 24.sp : 15.sp;
-    double paddingHorizontal = textSizeProvider.isLargeTextMode ? 22.w : 15.w;
-    double paddingVertical = textSizeProvider.isLargeTextMode ? 12.h : 3.h;
-
     Size size = MediaQuery.of(context).size;
 
     return Container(
       width: size.width * 0.9,
       padding: EdgeInsets.symmetric(
-          horizontal: paddingHorizontal, vertical: paddingVertical),
+        horizontal: _paddingHorizontal,
+        vertical: _paddingVertical,
+      ),
       child: Column(
         children: [
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
               widget.labelText,
-              style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold),
+              style:
+                  TextStyle(fontSize: _fontSize, fontWeight: FontWeight.bold),
             ),
           ),
           TextFormField(
-            controller: widget.controller, // Utilisez ce paramètre
-            obscureText: (widget.obscureText && _obscureText),
+            controller: widget.controller,
+            obscureText: widget.obscureText && _obscureText,
             decoration: InputDecoration(
               isDense: widget.isDense ?? false,
               hintText: widget.hintText,
               hintStyle: TextStyle(
-                fontSize: hintsize,
+                fontSize: _hintSize,
                 color: const Color.fromARGB(255, 73, 73, 73),
               ),
               suffixIcon: widget.suffixIcon
@@ -82,7 +98,7 @@ class _CustomInputFieldState extends State<CustomInputField> {
                   : null,
               suffixIconConstraints: widget.isDense != null
                   ? BoxConstraints(
-                      maxHeight: maxHeight,
+                      maxHeight: _maxHeight,
                     )
                   : null,
             ),

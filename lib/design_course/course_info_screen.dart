@@ -1,8 +1,7 @@
 // ignore_for_file: library_private_types_in_public_api
 
 import 'package:flutter/material.dart';
-import 'package:ticeo/design_course/content_course/principal_content.dart';
-import 'package:ticeo/design_course/content_course/timer_secondes.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart'; // Ajout de flutter_screenutil
 import 'design_course_app_theme.dart';
 
 class CourseInfoScreen extends StatefulWidget {
@@ -20,6 +19,7 @@ class _CourseInfoScreenState extends State<CourseInfoScreen>
   double opacity1 = 0.0;
   double opacity2 = 0.0;
   double opacity3 = 0.0;
+
   @override
   void initState() {
     animationController = AnimationController(
@@ -49,9 +49,13 @@ class _CourseInfoScreenState extends State<CourseInfoScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Initialisation de ScreenUtil
+    ScreenUtil.init(context,
+        designSize: const Size(360, 690), minTextAdapt: true);
+
     final double tempHeight = MediaQuery.of(context).size.height -
         (MediaQuery.of(context).size.width / 1.2) +
-        24.0;
+        ScreenUtil().setHeight(66.0); // Utilisation de ScreenUtil
     return Container(
       color: DesignCourseAppTheme.nearlyWhite,
       child: Scaffold(
@@ -67,53 +71,71 @@ class _CourseInfoScreenState extends State<CourseInfoScreen>
               ],
             ),
             Positioned(
-              top: (MediaQuery.of(context).size.width / 1.2) - 24.0,
+              top: (MediaQuery.of(context).size.width / 1.2) -
+                  ScreenUtil().setHeight(66.0), // Utilisation de ScreenUtil
               bottom: 0,
               left: 0,
               right: 0,
               child: Container(
                 decoration: BoxDecoration(
                   color: DesignCourseAppTheme.nearlyWhite,
-                  borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(32.0),
-                      topRight: Radius.circular(32.0)),
+                  borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(ScreenUtil()
+                          .setWidth(32.0)), // Utilisation de ScreenUtil
+                      topRight: Radius.circular(ScreenUtil()
+                          .setWidth(32.0))), // Utilisation de ScreenUtil
                   boxShadow: <BoxShadow>[
                     BoxShadow(
                         color: DesignCourseAppTheme.grey.withOpacity(0.2),
                         offset: const Offset(1.1, 1.1),
-                        blurRadius: 10.0),
+                        blurRadius: ScreenUtil()
+                            .setWidth(10.0)), // Utilisation de ScreenUtil
                   ],
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 8, right: 8),
+                  padding: EdgeInsets.symmetric(
+                      horizontal: ScreenUtil()
+                          .setWidth(8)), // Utilisation de ScreenUtil
                   child: SingleChildScrollView(
                     child: Container(
                       constraints: BoxConstraints(
-                          minHeight: infoHeight,
+                          minHeight: ScreenUtil().setHeight(
+                              infoHeight), // Utilisation de ScreenUtil
                           maxHeight: tempHeight > infoHeight
                               ? tempHeight
-                              : infoHeight),
+                              : ScreenUtil().setHeight(
+                                  infoHeight)), // Utilisation de ScreenUtil
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          const Padding(
-                            padding:
-                                EdgeInsets.only(top: 32.0, left: 18, right: 16),
+                          Padding(
+                            padding: EdgeInsets.only(
+                                top: ScreenUtil().setHeight(16.0),
+                                left: ScreenUtil().setWidth(16),
+                                right: ScreenUtil()
+                                    .setWidth(16)), // Utilisation de ScreenUtil
                             child: Text(
                               "Composantes de l'ordinateur",
                               textAlign: TextAlign.left,
                               style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 24,
-                                letterSpacing: 0.27,
+                                fontWeight: FontWeight.w500,
+                                fontFamily: 'Jersey',
+                                fontSize: ScreenUtil()
+                                    .setSp(30), // Utilisation de ScreenUtil
+                                letterSpacing: ScreenUtil().setWidth(
+                                    0.27), // Utilisation de ScreenUtil
                                 color: DesignCourseAppTheme.darkerText,
                               ),
                             ),
                           ),
-                          const Padding(
+                          Padding(
                             padding: EdgeInsets.only(
-                                left: 16, right: 16, bottom: 8, top: 16),
+                                left: ScreenUtil().setWidth(16),
+                                right: ScreenUtil().setWidth(16),
+                                bottom: ScreenUtil().setHeight(0),
+                                top: ScreenUtil()
+                                    .setHeight(6)), // Utilisation de ScreenUtil
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               crossAxisAlignment: CrossAxisAlignment.center,
@@ -124,7 +146,8 @@ class _CourseInfoScreenState extends State<CourseInfoScreen>
                             duration: const Duration(milliseconds: 200),
                             opacity: opacity1,
                             child: Padding(
-                              padding: const EdgeInsets.all(8),
+                              padding: EdgeInsets.all(ScreenUtil()
+                                  .setWidth(2)), // Utilisation de ScreenUtil
                               child: Row(
                                 children: <Widget>[
                                   getTimeBoxUI('2', 'Séances'),
@@ -139,8 +162,12 @@ class _CourseInfoScreenState extends State<CourseInfoScreen>
                               duration: const Duration(milliseconds: 200),
                               opacity: opacity2,
                               child: Padding(
-                                padding: const EdgeInsets.only(
-                                    left: 16, right: 16, top: 8, bottom: 8),
+                                padding: EdgeInsets.only(
+                                    left: ScreenUtil().setWidth(16),
+                                    right: ScreenUtil().setWidth(16),
+                                    top: ScreenUtil().setHeight(0),
+                                    bottom: ScreenUtil().setHeight(
+                                        0)), // Utilisation de ScreenUtil
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
@@ -185,20 +212,26 @@ class _CourseInfoScreenState extends State<CourseInfoScreen>
                             duration: const Duration(milliseconds: 200),
                             opacity: opacity3,
                             child: Padding(
-                              padding: const EdgeInsets.only(
-                                  left: 16, bottom: 16, right: 16),
+                              padding: EdgeInsets.only(
+                                  left: ScreenUtil().setWidth(16),
+                                  bottom: ScreenUtil().setHeight(16),
+                                  right: ScreenUtil().setWidth(
+                                      16)), // Utilisation de ScreenUtil
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: <Widget>[
                                   SizedBox(
-                                    width: 48,
-                                    height: 48,
+                                    width: ScreenUtil().setWidth(
+                                        50), // Utilisation de ScreenUtil
+                                    height: ScreenUtil().setHeight(
+                                        50), // Utilisation de ScreenUtil
                                     child: Container(
                                       decoration: BoxDecoration(
                                         color: DesignCourseAppTheme.nearlyWhite,
-                                        borderRadius: const BorderRadius.all(
-                                          Radius.circular(16.0),
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(ScreenUtil().setWidth(
+                                              16.0)), // Utilisation de ScreenUtil
                                         ),
                                         border: Border.all(
                                             color: DesignCourseAppTheme.grey
@@ -211,16 +244,19 @@ class _CourseInfoScreenState extends State<CourseInfoScreen>
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(
-                                    width: 16,
+                                  SizedBox(
+                                    width: ScreenUtil().setWidth(
+                                        16), // Utilisation de ScreenUtil
                                   ),
                                   Expanded(
                                     child: Container(
-                                      height: 48,
+                                      height: ScreenUtil().setHeight(
+                                          38), // Utilisation de ScreenUtil
                                       decoration: BoxDecoration(
                                         color: DesignCourseAppTheme.nearlyBlue,
-                                        borderRadius: const BorderRadius.all(
-                                          Radius.circular(16.0),
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(ScreenUtil().setWidth(
+                                              16.0)), // Utilisation de ScreenUtil
                                         ),
                                         boxShadow: <BoxShadow>[
                                           BoxShadow(
@@ -228,7 +264,8 @@ class _CourseInfoScreenState extends State<CourseInfoScreen>
                                                   .nearlyBlue
                                                   .withOpacity(0.5),
                                               offset: const Offset(1.1, 1.1),
-                                              blurRadius: 10.0),
+                                              blurRadius: ScreenUtil().setWidth(
+                                                  10.0)), // Utilisation de ScreenUtil
                                         ],
                                       ),
                                       child: const Center(
@@ -236,23 +273,24 @@ class _CourseInfoScreenState extends State<CourseInfoScreen>
                                           'commencer ou continuer le cour',
                                           textAlign: TextAlign.left,
                                           style: TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 18,
-                                            letterSpacing: 0.0,
+                                            fontWeight: FontWeight.w500,
+                                            fontFamily: 'Jersey',
+                                            fontSize: 22,
                                             color: DesignCourseAppTheme
                                                 .nearlyWhite,
                                           ),
                                         ),
                                       ),
                                     ),
-                                  )
+                                  ),
                                 ],
                               ),
                             ),
                           ),
                           SizedBox(
-                            height: MediaQuery.of(context).padding.bottom,
-                          )
+                            height: ScreenUtil()
+                                .setHeight(0), // Utilisation de ScreenUtil
+                          ),
                         ],
                       ),
                     ),
@@ -260,100 +298,51 @@ class _CourseInfoScreenState extends State<CourseInfoScreen>
                 ),
               ),
             ),
-            Positioned(
-              top: (MediaQuery.of(context).size.width / 1.2) - 24.0 - 35,
-              right: 35,
-              child: ScaleTransition(
-                alignment: Alignment.center,
-                scale: CurvedAnimation(
-                    parent: animationController!, curve: Curves.fastOutSlowIn),
-                child: Card(
-                  color: DesignCourseAppTheme.nearlyBlue,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(50.0)),
-                  elevation: 10.0,
-                  child: const SizedBox(
-                    width: 60,
-                    height: 60,
-                    child: Center(
-                      child: Icon(
-                        Icons.favorite,
-                        color: DesignCourseAppTheme.nearlyWhite,
-                        size: 30,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-              child: SizedBox(
-                width: AppBar().preferredSize.height,
-                height: AppBar().preferredSize.height,
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius:
-                        BorderRadius.circular(AppBar().preferredSize.height),
-                    child: const Icon(
-                      Icons.arrow_back_ios,
-                      color: DesignCourseAppTheme.nearlyBlack,
-                    ),
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                ),
-              ),
-            )
           ],
         ),
       ),
     );
   }
 
-  Widget getTimeBoxUI(String text1, String txt2) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: DesignCourseAppTheme.nearlyWhite,
-          borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-          boxShadow: <BoxShadow>[
-            BoxShadow(
-                color: DesignCourseAppTheme.grey.withOpacity(0.2),
-                offset: const Offset(1.1, 1.1),
-                blurRadius: 8.0),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.only(
-              left: 18.0, right: 18.0, top: 12.0, bottom: 12.0),
+  Widget getTimeBoxUI(String time, String label) {
+    return Expanded(
+      child: Padding(
+        padding: EdgeInsets.only(
+            right: ScreenUtil().setWidth(10)), // Utilisation de ScreenUtil
+        child: Container(
+          padding: EdgeInsets.all(
+              ScreenUtil().setWidth(10)), // Utilisation de ScreenUtil
+          decoration: BoxDecoration(
+            color: DesignCourseAppTheme.nearlyWhite,
+            borderRadius: BorderRadius.circular(
+                ScreenUtil().setWidth(10.0)), // Utilisation de ScreenUtil
+            boxShadow: <BoxShadow>[
+              BoxShadow(
+                  color: DesignCourseAppTheme.grey.withOpacity(0.2),
+                  offset: const Offset(1.1, 1.1),
+                  blurRadius:
+                      ScreenUtil().setWidth(6.0)), // Utilisation de ScreenUtil
+            ],
+          ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               Text(
-                text1,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                  letterSpacing: 0.27,
-                  color: DesignCourseAppTheme.nearlyBlue,
-                ),
+                time,
+                style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize:
+                        ScreenUtil().setSp(24), // Utilisation de ScreenUtil
+                    color: Color.fromARGB(255, 221, 153, 76)),
               ),
               Text(
-                txt2,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w200,
-                  fontSize: 14,
-                  letterSpacing: 0.27,
-                  color: DesignCourseAppTheme.grey,
-                ),
-              ),
+                label,
+                style: TextStyle(
+                    fontWeight: FontWeight.w400,
+                    fontSize:
+                        ScreenUtil().setSp(14), // Utilisation de ScreenUtil
+                    color: DesignCourseAppTheme.grey),
+              )
             ],
           ),
         ),
@@ -363,59 +352,63 @@ class _CourseInfoScreenState extends State<CourseInfoScreen>
 }
 
 class CourseCard extends StatelessWidget {
+  const CourseCard({
+    Key? key,
+    required this.title,
+    required this.duration,
+    required this.courses,
+  }) : super(key: key);
+
   final String title;
   final String duration;
   final String courses;
 
-  const CourseCard(
-      {super.key,
-      required this.title,
-      required this.duration,
-      required this.courses});
-
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const CountdownTimerScreen(),
+    return Container(
+      padding: EdgeInsets.all(
+          ScreenUtil().setWidth(16)), // Utilisation de ScreenUtil
+      decoration: BoxDecoration(
+        border: const Border(
+            top: BorderSide(color: Color.fromARGB(255, 210, 210, 210))),
+        color: DesignCourseAppTheme.nearlyWhite,
+        borderRadius: BorderRadius.circular(
+            ScreenUtil().setWidth(0.0)), // Utilisation de ScreenUtil
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: ScreenUtil().setSp(16), // Utilisation de ScreenUtil
+              color: const Color.fromARGB(255, 72, 73, 73),
+            ),
           ),
-        );
-      },
-      child: Card(
-        margin: const EdgeInsets.all(8.0),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                duration,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
-              ),
-              Text(
-                courses,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
+          SizedBox(
+            height: ScreenUtil().setHeight(4), // Utilisation de ScreenUtil
           ),
-        ),
+          Text(
+            duration,
+            style: TextStyle(
+              fontWeight: FontWeight.w400,
+              fontSize: ScreenUtil().setSp(14), // Utilisation de ScreenUtil
+              color: DesignCourseAppTheme.grey,
+            ),
+          ),
+          SizedBox(
+            height: ScreenUtil().setHeight(4), // Utilisation de ScreenUtil
+          ),
+          Text(
+            courses,
+            style: TextStyle(
+              fontWeight: FontWeight.w400,
+              fontSize: ScreenUtil().setSp(14), // Utilisation de ScreenUtil
+              color: DesignCourseAppTheme.grey,
+            ),
+          ),
+        ],
       ),
     );
   }

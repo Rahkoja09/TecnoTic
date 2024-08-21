@@ -1,8 +1,8 @@
 // ignore_for_file: library_private_types_in_public_api
 
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ticeo/design_course/design_course_app_theme.dart';
-
 import 'models/category.dart';
 
 class CategoryListView extends StatefulWidget {
@@ -38,13 +38,13 @@ class _CategoryListViewState extends State<CategoryListView>
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 16, bottom: 16),
+      padding: EdgeInsets.only(top: 10.h, bottom: 10.h),
       child: SizedBox(
-        height: 134,
+        height: 108.h,
         width: double.infinity,
         child: ListView.builder(
           padding:
-              const EdgeInsets.only(top: 0, bottom: 0, right: 16, left: 16),
+              EdgeInsets.only(top: 0.h, bottom: 0.h, right: 10.w, left: 10.w),
           itemCount: Category.categoryList.length,
           scrollDirection: Axis.horizontal,
           itemBuilder: (BuildContext context, int index) {
@@ -96,42 +96,42 @@ class CategoryView extends StatelessWidget {
           opacity: animation!,
           child: Transform(
             transform: Matrix4.translationValues(
-                100 * (1.0 - animation!.value), 0.0, 0.0),
+                100.w * (1.0 - animation!.value), 0.0, 0.0),
             child: InkWell(
               splashColor: Colors.transparent,
               onTap: callback,
               child: SizedBox(
-                width: 280,
+                width: 280.w,
                 child: Stack(
                   children: <Widget>[
                     Row(
                       children: <Widget>[
-                        const SizedBox(
-                          width: 48,
+                        SizedBox(
+                          width: 42.w,
                         ),
                         Expanded(
                           child: Container(
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               color: Color.fromARGB(29, 148, 233, 105),
                               borderRadius:
-                                  BorderRadius.all(Radius.circular(16.0)),
+                                  BorderRadius.all(Radius.circular(16.0.sp)),
                             ),
                             child: Row(
                               children: <Widget>[
-                                const SizedBox(
-                                  width: 48 + 24.0,
+                                SizedBox(
+                                  width: 46.w + 22.w,
                                 ),
                                 Expanded(
                                   child: Column(
                                     children: <Widget>[
                                       Padding(
-                                        padding: const EdgeInsets.only(top: 16),
+                                        padding: EdgeInsets.only(top: 16.h),
                                         child: Text(
                                           category!.title,
                                           textAlign: TextAlign.left,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontWeight: FontWeight.w600,
-                                            fontSize: 16,
+                                            fontSize: 14.sp,
                                             letterSpacing: 0.27,
                                             color:
                                                 DesignCourseAppTheme.darkerText,
@@ -142,8 +142,8 @@ class CategoryView extends StatelessWidget {
                                         child: SizedBox(),
                                       ),
                                       Padding(
-                                        padding: const EdgeInsets.only(
-                                            right: 16, bottom: 8),
+                                        padding: EdgeInsets.only(
+                                            right: 16.w, bottom: 8.h),
                                         child: Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
@@ -153,9 +153,9 @@ class CategoryView extends StatelessWidget {
                                             Text(
                                               '${category!.lessonCount} cours',
                                               textAlign: TextAlign.left,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontWeight: FontWeight.w200,
-                                                fontSize: 12,
+                                                fontSize: 10.sp,
                                                 letterSpacing: 0.27,
                                                 color:
                                                     DesignCourseAppTheme.grey,
@@ -165,8 +165,8 @@ class CategoryView extends StatelessWidget {
                                         ),
                                       ),
                                       Padding(
-                                        padding: const EdgeInsets.only(
-                                            bottom: 16, right: 16),
+                                        padding: EdgeInsets.only(
+                                            bottom: 12.h, right: 12.w),
                                         child: Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
@@ -176,23 +176,23 @@ class CategoryView extends StatelessWidget {
                                             Text(
                                               '${category!.money} heures',
                                               textAlign: TextAlign.left,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontWeight: FontWeight.w600,
-                                                fontSize: 18,
+                                                fontSize: 14.sp,
                                                 letterSpacing: 0.27,
                                                 color: DesignCourseAppTheme
                                                     .nearlyBlue,
                                               ),
                                             ),
                                             Container(
-                                              decoration: const BoxDecoration(
+                                              decoration: BoxDecoration(
                                                 color: DesignCourseAppTheme
                                                     .nearlyBlue,
                                                 borderRadius: BorderRadius.all(
-                                                    Radius.circular(8.0)),
+                                                    Radius.circular(8.0.sp)),
                                               ),
-                                              child: const Padding(
-                                                padding: EdgeInsets.all(4.0),
+                                              child: Padding(
+                                                padding: EdgeInsets.all(2.0.sp),
                                                 child: Icon(
                                                   Icons.add,
                                                   color: DesignCourseAppTheme
@@ -214,12 +214,12 @@ class CategoryView extends StatelessWidget {
                     ),
                     Padding(
                       padding:
-                          const EdgeInsets.only(top: 24, bottom: 24, left: 16),
+                          EdgeInsets.only(top: 24.h, bottom: 24.h, left: 18.w),
                       child: Row(
                         children: <Widget>[
                           ClipRRect(
                             borderRadius:
-                                const BorderRadius.all(Radius.circular(16.0)),
+                                BorderRadius.all(Radius.circular(16.0.sp)),
                             child: AspectRatio(
                                 aspectRatio: 1.0,
                                 child: Image.asset(category!.imagePath)),

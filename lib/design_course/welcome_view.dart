@@ -97,7 +97,7 @@ class _HomePageState extends State<HomePage>
 
   Widget getPopularCourseUI() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18.0),
+      padding: EdgeInsets.symmetric(horizontal: 18.0.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -131,7 +131,7 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget getStartButtonUI() {
-    double buttonFontSize = _isLargeTextMode ? 30.sp : 22.sp;
+    double buttonFontSize = _isLargeTextMode ? 30.sp : 26.sp;
 
     return Padding(
       padding: const EdgeInsets.all(18.0),
@@ -154,8 +154,9 @@ class _HomePageState extends State<HomePage>
             "Commencer",
             style: TextStyle(
               fontSize: buttonFontSize,
+              fontFamily: 'Jersey',
               color: Colors.white,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w300,
             ),
           ),
         ),
@@ -164,7 +165,7 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget getAppBarUI() {
-    double titleFontSize = _isLargeTextMode ? 32.sp : 26.sp;
+    double titleFontSize = _isLargeTextMode ? 32.sp : 34.sp;
     double subtitleFontSize = _isLargeTextMode ? 18.sp : 16.sp;
 
     return Padding(
@@ -172,7 +173,7 @@ class _HomePageState extends State<HomePage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const SizedBox(height: 50.0),
+          SizedBox(height: 50.0.w),
           SlideTransition(
             position: _slideAnimation,
             child: FadeTransition(
@@ -181,10 +182,11 @@ class _HomePageState extends State<HomePage>
                 'Bienvenue dans la section cour de TIC-eo',
                 textAlign: TextAlign.left,
                 style: TextStyle(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w500,
                   fontSize: titleFontSize,
+                  fontFamily: 'Jersey',
                   letterSpacing: 0.27,
-                  color: DesignCourseAppTheme.darkerText,
+                  color: const Color.fromARGB(255, 88, 89, 90),
                 ),
               ),
             ),
@@ -196,7 +198,7 @@ class _HomePageState extends State<HomePage>
 
   Widget _buildAnimatedInfoCard(String title, String description, Color color,
       String backgroundImagePath) {
-    double cardTitleFontSize = _isLargeTextMode ? 34.sp : 20.sp;
+    double cardTitleFontSize = _isLargeTextMode ? 34.sp : 26.sp;
     double cardDescriptionFontSize = _isLargeTextMode ? 28.sp : 16.sp;
 
     return FadeTransition(
@@ -237,11 +239,12 @@ class _HomePageState extends State<HomePage>
                       title,
                       style: TextStyle(
                         fontSize: cardTitleFontSize,
-                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Jersey',
+                        fontWeight: FontWeight.w400,
                         color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 8.0),
+                    SizedBox(height: 8.0.h),
                     Text(
                       description,
                       style: TextStyle(

@@ -1,9 +1,6 @@
-// ignore_for_file: library_private_types_in_public_api
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:provider/provider.dart'; // Assurez-vous d'importer provider
-import 'package:ticeo/components/state/provider_state.dart';
+import 'package:ticeo/components/database_gest/database_helper.dart';
 import 'package:ticeo/introduction_animation/components/care_view.dart';
 import 'package:ticeo/introduction_animation/components/center_next_button.dart';
 import 'package:ticeo/introduction_animation/components/mood_diary_vew.dart';
@@ -23,12 +20,14 @@ class IntroductionAnimationScreen extends StatefulWidget {
 class _IntroductionAnimationScreenState
     extends State<IntroductionAnimationScreen> with TickerProviderStateMixin {
   AnimationController? _animationController;
+  bool _isLargeTextMode = false;
 
   @override
   void initState() {
     _animationController =
         AnimationController(vsync: this, duration: const Duration(seconds: 8));
     _animationController?.animateTo(0.0);
+    _loadPreferences();
     super.initState();
   }
 
@@ -38,11 +37,15 @@ class _IntroductionAnimationScreenState
     super.dispose();
   }
 
+  Future<void> _loadPreferences() async {
+    final mode = await DatabaseHelper().getPreference();
+    setState(() {
+      _isLargeTextMode = mode == 'large';
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final modeProvider = Provider.of<ModeProvider>(context);
-    final isLargeTextMode = modeProvider.isLargeTextMode;
-
     // Initialize ScreenUtil here if not done in the parent widget
     ScreenUtil.init(context, designSize: const Size(414, 896));
 
@@ -53,34 +56,34 @@ class _IntroductionAnimationScreenState
           children: [
             SplashView(
               animationController: _animationController!,
-              textSize: isLargeTextMode ? 32.sp : 22.sp,
+              textSize: _isLargeTextMode ? 32.sp : 22.sp,
             ),
             RelaxView(
               animationController: _animationController!,
-              textSize: isLargeTextMode ? 36.sp : 22.sp,
+              textSize: _isLargeTextMode ? 36.sp : 22.sp,
             ),
             CareView(
               animationController: _animationController!,
-              textSize: isLargeTextMode ? 36.sp : 22.sp,
+              textSize: _isLargeTextMode ? 36.sp : 22.sp,
             ),
             MoodDiaryView(
               animationController: _animationController!,
-              textSize: isLargeTextMode ? 36.sp : 22.sp,
+              textSize: _isLargeTextMode ? 36.sp : 22.sp,
             ),
             WelcomeView(
               animationController: _animationController!,
-              textSize: isLargeTextMode ? 36.sp : 22.sp,
+              textSize: _isLargeTextMode ? 36.sp : 22.sp,
             ),
             TopBackSkipView(
               onBackClick: _onBackClick,
               onSkipClick: _onSkipClick,
               animationController: _animationController!,
-              textSize: isLargeTextMode ? 22.sp : 22.sp,
+              textSize: _isLargeTextMode ? 22.sp : 22.sp,
             ),
             CenterNextButton(
               animationController: _animationController!,
               onNextClick: _onNextClick,
-              textSize: isLargeTextMode ? 16.sp : 16.sp,
+              textSize: _isLargeTextMode ? 16.sp : 16.sp,
             ),
           ],
         ),
