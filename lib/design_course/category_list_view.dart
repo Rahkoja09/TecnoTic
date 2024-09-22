@@ -1,7 +1,8 @@
-// ignore_for_file: library_private_types_in_public_api
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
+import 'package:ticeo/components/Theme/ThemeProvider.dart';
+import 'package:ticeo/components/database_gest/database_helper.dart';
 import 'package:ticeo/design_course/design_course_app_theme.dart';
 import 'models/category.dart';
 
@@ -17,11 +18,21 @@ class _CategoryListViewState extends State<CategoryListView>
     with TickerProviderStateMixin {
   AnimationController? animationController;
 
+  bool isLargeTextMode = false;
+
+  Future<void> _loadPreferences() async {
+    final mode = await DatabaseHelper().getPreference();
+    setState(() {
+      isLargeTextMode = mode == 'largePolice';
+    });
+  }
+
   @override
   void initState() {
     animationController = AnimationController(
         duration: const Duration(milliseconds: 400), vsync: this);
     super.initState();
+    _loadPreferences();
   }
 
   Future<bool> getData() async {
@@ -37,10 +48,14 @@ class _CategoryListViewState extends State<CategoryListView>
 
   @override
   Widget build(BuildContext context) {
+    // Adjust the card height and width based on the isLargeTextMode
+    double cardHeight = isLargeTextMode ? 140.h : 108.h;
+    double cardWidth = isLargeTextMode ? 300.w : 280.w;
+
     return Padding(
       padding: EdgeInsets.only(top: 10.h, bottom: 10.h),
       child: SizedBox(
-        height: 108.h,
+        height: cardHeight, // Adjusted height
         width: double.infinity,
         child: ListView.builder(
           padding:
@@ -66,6 +81,8 @@ class _CategoryListViewState extends State<CategoryListView>
               animation: animation,
               animationController: animationController,
               callback: widget.callBack,
+              isLargeTextMode: isLargeTextMode,
+              cardWidth: cardWidth,
             );
           },
         ),
@@ -75,20 +92,33 @@ class _CategoryListViewState extends State<CategoryListView>
 }
 
 class CategoryView extends StatelessWidget {
-  const CategoryView(
-      {super.key,
-      this.category,
-      this.animationController,
-      this.animation,
-      this.callback});
+  const CategoryView({
+    super.key,
+    this.category,
+    this.animationController,
+    this.animation,
+    this.callback,
+    this.isLargeTextMode = false,
+    this.cardWidth = 280.0, // Default width
+  });
 
   final VoidCallback? callback;
   final Category? category;
   final AnimationController? animationController;
   final Animation<double>? animation;
+  final bool isLargeTextMode;
+  final double cardWidth;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Provider.of<ThemeProvider>(context).currentTheme;
+    double titleFontSize = isLargeTextMode ? 20.sp : 14.sp;
+    double subTextFontSize = isLargeTextMode ? 16.sp : 10.sp;
+    double infoFontSize = isLargeTextMode ? 18.sp : 14.sp;
+    double coursSpaceleft = isLargeTextMode ? 16.sp : 4.sp;
+    double heureSpaceleft = isLargeTextMode ? 16.sp : 4.sp;
+    double titleSpaceleft = isLargeTextMode ? 16.sp : 4.sp;
+
     return AnimatedBuilder(
       animation: animationController!,
       builder: (BuildContext context, Widget? child) {
@@ -101,7 +131,7 @@ class CategoryView extends StatelessWidget {
               splashColor: Colors.transparent,
               onTap: callback,
               child: SizedBox(
-                width: 280.w,
+                width: cardWidth,
                 child: Stack(
                   children: <Widget>[
                     Row(
@@ -125,17 +155,25 @@ class CategoryView extends StatelessWidget {
                                   child: Column(
                                     children: <Widget>[
                                       Padding(
-                                        padding: EdgeInsets.only(top: 16.h),
+                                        padding: EdgeInsets.only(
+                                            top: 16.h,
+                                            left: titleSpaceleft,
+                                            right: titleSpaceleft),
                                         child: Text(
                                           category!.title,
                                           textAlign: TextAlign.left,
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 14.sp,
-                                            letterSpacing: 0.27,
-                                            color:
-                                                DesignCourseAppTheme.darkerText,
-                                          ),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyText1
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: titleFontSize,
+                                                letterSpacing: 0.27,
+                                                color: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyText1
+                                                    ?.color,
+                                              ),
                                         ),
                                       ),
                                       const Expanded(
@@ -143,7 +181,9 @@ class CategoryView extends StatelessWidget {
                                       ),
                                       Padding(
                                         padding: EdgeInsets.only(
-                                            right: 16.w, bottom: 8.h),
+                                            right: 16.w,
+                                            bottom: 8.h,
+                                            left: coursSpaceleft),
                                         child: Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
@@ -155,7 +195,7 @@ class CategoryView extends StatelessWidget {
                                               textAlign: TextAlign.left,
                                               style: TextStyle(
                                                 fontWeight: FontWeight.w200,
-                                                fontSize: 10.sp,
+                                                fontSize: subTextFontSize,
                                                 letterSpacing: 0.27,
                                                 color:
                                                     DesignCourseAppTheme.grey,
@@ -166,7 +206,9 @@ class CategoryView extends StatelessWidget {
                                       ),
                                       Padding(
                                         padding: EdgeInsets.only(
-                                            bottom: 12.h, right: 12.w),
+                                            bottom: 12.h,
+                                            right: 12.w,
+                                            left: heureSpaceleft),
                                         child: Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
@@ -178,7 +220,7 @@ class CategoryView extends StatelessWidget {
                                               textAlign: TextAlign.left,
                                               style: TextStyle(
                                                 fontWeight: FontWeight.w600,
-                                                fontSize: 14.sp,
+                                                fontSize: infoFontSize,
                                                 letterSpacing: 0.27,
                                                 color: DesignCourseAppTheme
                                                     .nearlyBlue,

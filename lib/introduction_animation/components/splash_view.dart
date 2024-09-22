@@ -1,7 +1,6 @@
-// ignore_for_file: library_private_types_in_public_api
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:ticeo/components/database_gest/database_helper.dart';
 
 class SplashView extends StatefulWidget {
   final AnimationController animationController;
@@ -18,6 +17,22 @@ class SplashView extends StatefulWidget {
 }
 
 class _SplashViewState extends State<SplashView> {
+  bool _isLargeTextMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences(); // Appel de la fonction pour charger les préférences
+  }
+
+  Future<void> _loadPreferences() async {
+    final mode = await DatabaseHelper().getPreference();
+    print('Mode est : $mode');
+    setState(() {
+      _isLargeTextMode = mode == 'largePolice';
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final introductionAnimation =
@@ -32,6 +47,7 @@ class _SplashViewState extends State<SplashView> {
         ),
       ),
     );
+
     return SlideTransition(
       position: introductionAnimation,
       child: SingleChildScrollView(
@@ -49,8 +65,7 @@ class _SplashViewState extends State<SplashView> {
               child: Text(
                 "Bienvenue",
                 style: TextStyle(
-                  fontSize: widget.textSize
-                      .sp, // Utiliser textSize.sp pour ajuster la taille
+                  fontSize: widget.textSize.sp,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -58,7 +73,7 @@ class _SplashViewState extends State<SplashView> {
             Padding(
               padding: EdgeInsets.only(left: 24.w, right: 24.w),
               child: Text(
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore",
+                "Explorons la technologie avec Tecno-tic",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     fontSize: widget.textSize.sp), // Ajuster la taille du texte
@@ -75,10 +90,10 @@ class _SplashViewState extends State<SplashView> {
                   widget.animationController.animateTo(0.2);
                 },
                 child: Container(
-                  height: 52.h,
+                  height: _isLargeTextMode ? 75.h : 60.h,
                   padding: EdgeInsets.only(
-                    left: 56.w,
-                    right: 56.w,
+                    left: _isLargeTextMode ? 60.w : 56.w,
+                    right: _isLargeTextMode ? 60.w : 56.w,
                     top: 16.h,
                     bottom: 16.h,
                   ),
@@ -89,9 +104,10 @@ class _SplashViewState extends State<SplashView> {
                   child: Text(
                     "Commençons",
                     style: TextStyle(
-                      fontSize: 18.sp,
-                      color: Colors.white,
-                    ),
+                        fontSize: widget.textSize.sp,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'Jersey'),
                   ),
                 ),
               ),

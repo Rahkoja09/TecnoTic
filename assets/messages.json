@@ -1,0 +1,20 @@
+[
+    {
+      "id": "1",
+      "author": { "id": "user1" },
+      "createdAt": 1633024800000, 
+      "text": "Hello!",
+      "type": "text"
+    },
+    {
+      "id": "2",
+      "author": { "id": "user2" },
+      "createdAt": 1633024860000, 
+      "uri": "https://example.com/image.png",
+      "name": "image.png",
+      "size": 12345,
+      "mimeType": "image/png",
+      "type": "image"
+    }
+  ]
+  

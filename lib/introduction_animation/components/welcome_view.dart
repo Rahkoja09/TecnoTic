@@ -76,8 +76,8 @@ class WelcomeView extends StatelessWidget {
                     maxHeight: 280.h, // Responsive height
                   ),
                   child: Image.asset(
-                    'assets/logo/logo.jpg',
-                    fit: BoxFit.contain,
+                    'assets/icons/logo.jpg',
+                    fit: BoxFit.cover,
                   ),
                 ),
               ),
@@ -87,10 +87,9 @@ class WelcomeView extends StatelessWidget {
               SlideTransition(
                 position: welcomeFirstHalfAnimation,
                 child: Text(
-                  "Ary indrindra",
+                  "",
                   style: TextStyle(
-                    fontSize:
-                        textSize.sp, // Utiliser textSize pour ajuster la taille
+                    fontSize: textSize.sp,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -102,10 +101,12 @@ class WelcomeView extends StatelessWidget {
                     top: 16.h,
                     bottom: 6.h), // Responsive padding
                 child: Text(
-                  "Loharanom-pahalalana ho an'ny olom-pirenena te hivoatra",
+                  "Vers l'excelence Numerique",
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                      fontSize: textSize.sp), // Ajuster la taille du texte
+                    fontSize: textSize.sp,
+                    fontWeight: FontWeight.w500,
+                  ), // Ajuster la taille du texte
                 ),
               ),
             ],

@@ -3,13 +3,14 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class CareView extends StatelessWidget {
   final AnimationController animationController;
-  final double textSize; // Nouveau paramètre pour la taille du texte
+  final double textSize;
+  final double TietletextSize;
 
-  const CareView({
-    super.key,
-    required this.animationController,
-    required this.textSize, // Ajouter le paramètre au constructeur
-  });
+  const CareView(
+      {super.key,
+      required this.animationController,
+      required this.textSize,
+      required this.TietletextSize});
 
   @override
   Widget build(BuildContext context) {
@@ -107,10 +108,10 @@ class CareView extends StatelessWidget {
                   child: Text(
                     "Mentorat",
                     style: TextStyle(
-                      fontSize: textSize
-                          .sp, // Utiliser textSize pour ajuster la taille
-                      fontWeight: FontWeight.bold,
-                    ),
+                        fontSize: TietletextSize
+                            .sp, // Utiliser textSize pour ajuster la taille
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'Jersey'),
                   ),
                 ),
               ),
@@ -122,7 +123,7 @@ class CareView extends StatelessWidget {
                   top: 6.h,
                 ),
                 child: Text(
-                  "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore",
+                  "Une service de mentoring à votre disposition, pour avoir des conseilles et assistances des professsionnels",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: textSize.sp, // Ajuster la taille du texte

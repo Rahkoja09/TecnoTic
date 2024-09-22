@@ -44,10 +44,10 @@ class TopBackSkipView extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
         child: SizedBox(
-          height: 58.h, // Adjusted height for responsiveness
+          height: 58.h,
           child: Padding(
             padding:
-                EdgeInsets.only(left: 8.w, right: 16.w), // Responsive padding
+                EdgeInsets.only(left: 8.w, right: 16.w),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -56,12 +56,12 @@ class TopBackSkipView extends StatelessWidget {
                   child: Row(
                     children: [
                       Icon(Icons.arrow_back_ios_new_rounded,
-                          size: 24.sp), // Responsive icon size
-                      SizedBox(width: 4.w), // Responsive spacing
+                          size: 24.sp), 
+                      SizedBox(width: 4.w), 
                       Text(
                         'Retour',
                         style: TextStyle(
-                            fontSize: textSize.sp), // Responsive text size
+                            fontSize: textSize.sp), 
                       ),
                     ],
                   ),

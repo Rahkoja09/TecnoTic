@@ -40,7 +40,7 @@ class _IntroductionAnimationScreenState
   Future<void> _loadPreferences() async {
     final mode = await DatabaseHelper().getPreference();
     setState(() {
-      _isLargeTextMode = mode == 'large';
+      _isLargeTextMode = mode == 'largePolice';
     });
   }
 
@@ -61,14 +61,17 @@ class _IntroductionAnimationScreenState
             RelaxView(
               animationController: _animationController!,
               textSize: _isLargeTextMode ? 36.sp : 22.sp,
+              TietletextSize: _isLargeTextMode ? 50.sp : 38.sp,
             ),
             CareView(
               animationController: _animationController!,
               textSize: _isLargeTextMode ? 36.sp : 22.sp,
+              TietletextSize: _isLargeTextMode ? 50.sp : 38.sp,
             ),
             MoodDiaryView(
               animationController: _animationController!,
               textSize: _isLargeTextMode ? 36.sp : 22.sp,
+              TietletextSize: _isLargeTextMode ? 50.sp : 38.sp,
             ),
             WelcomeView(
               animationController: _animationController!,
@@ -78,12 +81,12 @@ class _IntroductionAnimationScreenState
               onBackClick: _onBackClick,
               onSkipClick: _onSkipClick,
               animationController: _animationController!,
-              textSize: _isLargeTextMode ? 22.sp : 22.sp,
+              textSize: _isLargeTextMode ? 26.sp : 22.sp,
             ),
             CenterNextButton(
               animationController: _animationController!,
               onNextClick: _onNextClick,
-              textSize: _isLargeTextMode ? 16.sp : 16.sp,
+              textSize: _isLargeTextMode ? 22.sp : 22.sp,
             ),
           ],
         ),

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
+import 'package:ticeo/components/Theme/ThemeProvider.dart';
+import 'package:ticeo/components/database_gest/database_helper.dart';
 import 'package:ticeo/design_course/design_course_app_theme.dart';
 import 'models/category.dart';
 
 class PopularCourseListView extends StatefulWidget {
-  const PopularCourseListView({super.key, this.callBack});
+  const PopularCourseListView({super.key, required this.callBack});
 
-  final Function()? callBack;
+  final Function(Category category) callBack;
 
   @override
   _PopularCourseListViewState createState() => _PopularCourseListViewState();
@@ -15,7 +18,15 @@ class PopularCourseListView extends StatefulWidget {
 class _PopularCourseListViewState extends State<PopularCourseListView>
     with TickerProviderStateMixin {
   late AnimationController animationController;
-  late Future<void> _fetchData; // Déclaration du Future
+  late Future<void> _fetchData;
+  bool isLargeTextMode = false;
+
+  Future<void> _loadPreferences() async {
+    final mode = await DatabaseHelper().getPreference();
+    setState(() {
+      isLargeTextMode = mode == 'largePolice';
+    });
+  }
 
   @override
   void initState() {
@@ -24,7 +35,8 @@ class _PopularCourseListViewState extends State<PopularCourseListView>
       duration: const Duration(milliseconds: 400),
       vsync: this,
     );
-    _fetchData = _loadData(); // Initialisation du Future
+    _fetchData = _loadData();
+    _loadPreferences();
   }
 
   Future<void> _loadData() async {
@@ -58,6 +70,7 @@ class _PopularCourseListViewState extends State<PopularCourseListView>
               itemCount: Category.popularCourseList.length,
               itemBuilder: (BuildContext context, int index) {
                 final int count = Category.popularCourseList.length;
+                final category = Category.popularCourseList[index];
                 final Animation<double> animation =
                     Tween<double>(begin: 0.0, end: 1.0).animate(
                   CurvedAnimation(
@@ -67,11 +80,20 @@ class _PopularCourseListViewState extends State<PopularCourseListView>
                   ),
                 );
                 animationController.forward();
-                return CategoryView(
-                  callback: widget.callBack,
-                  category: Category.popularCourseList[index],
-                  animation: animation,
-                  animationController: animationController,
+
+                return GestureDetector(
+                  onTap: () {
+                    widget.callBack(category);
+                  },
+                  child: CategoryView(
+                    callback: () {
+                      widget.callBack(category);
+                    },
+                    category: category,
+                    animation: animation,
+                    animationController: animationController,
+                    isLargeTextMode: isLargeTextMode,
+                  ),
                 );
               },
             );
@@ -95,15 +117,24 @@ class CategoryView extends StatelessWidget {
     this.animationController,
     this.animation,
     this.callback,
+    required this.isLargeTextMode,
   });
 
   final VoidCallback? callback;
   final Category? category;
   final AnimationController? animationController;
   final Animation<double>? animation;
+  final bool isLargeTextMode;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Provider.of<ThemeProvider>(context).currentTheme;
+    double cardWidth = isLargeTextMode ? 340.w : 280.w;
+    double titlesize = isLargeTextMode ? 18.sp : 14.sp;
+    double subtitlesize = isLargeTextMode ? 16.sp : 12.sp;
+    double ratio = isLargeTextMode ? 2.28 : 1.28;
+    double blurRadius = isLargeTextMode ? 1.0.r : 6.0.r;
+
     return AnimatedBuilder(
       animation: animationController!,
       builder: (BuildContext context, Widget? child) {
@@ -116,14 +147,14 @@ class CategoryView extends StatelessWidget {
               splashColor: Colors.transparent,
               onTap: callback,
               child: SizedBox(
-                height: 280,
+                height: cardWidth,
                 child: Stack(
                   alignment: AlignmentDirectional.bottomCenter,
                   children: <Widget>[
                     Container(
                       decoration: BoxDecoration(
                         color: const Color.fromARGB(44, 240, 204, 121),
-                        borderRadius: BorderRadius.circular(16.0),
+                        borderRadius: BorderRadius.circular(16.0.r),
                       ),
                       child: Column(
                         children: <Widget>[
@@ -131,22 +162,31 @@ class CategoryView extends StatelessWidget {
                             child: Column(
                               children: <Widget>[
                                 Padding(
-                                  padding: const EdgeInsets.only(
-                                      top: 16, left: 16, right: 16),
+                                  padding: EdgeInsets.only(
+                                      top: 16.h, left: 16.w, right: 16.w),
                                   child: Text(
                                     category!.title,
                                     textAlign: TextAlign.left,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14.sp,
-                                      letterSpacing: 0.27,
-                                      color: DesignCourseAppTheme.darkerText,
-                                    ),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyText1
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: titlesize,
+                                          letterSpacing: 0.27.w,
+                                          color: Theme.of(context)
+                                              .textTheme
+                                              .bodyText1
+                                              ?.color,
+                                        ),
                                   ),
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.only(
-                                      top: 8, left: 16, right: 16, bottom: 8),
+                                  padding: EdgeInsets.only(
+                                      top: 8.w,
+                                      left: 16.w,
+                                      right: 16.w,
+                                      bottom: 8.w),
                                   child: Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
@@ -156,12 +196,18 @@ class CategoryView extends StatelessWidget {
                                       Text(
                                         '${category!.lessonCount} Séances',
                                         textAlign: TextAlign.left,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w200,
-                                          fontSize: 12.sp,
-                                          letterSpacing: 0.27,
-                                          color: DesignCourseAppTheme.grey,
-                                        ),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyText1
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w200,
+                                              fontSize: subtitlesize,
+                                              letterSpacing: 0.27.w,
+                                              color: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyText1
+                                                  ?.color,
+                                            ),
                                       ),
                                     ],
                                   ),
@@ -169,13 +215,13 @@ class CategoryView extends StatelessWidget {
                               ],
                             ),
                           ),
-                          const SizedBox(height: 48),
+                          SizedBox(height: 48.h),
                         ],
                       ),
                     ),
                     Padding(
                       padding:
-                          const EdgeInsets.only(top: 20, right: 18, left: 18),
+                          EdgeInsets.only(top: 20.w, right: 18.w, left: 18.w),
                       child: Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(16.0),
@@ -183,14 +229,14 @@ class CategoryView extends StatelessWidget {
                             BoxShadow(
                               color: DesignCourseAppTheme.grey.withOpacity(0.2),
                               offset: const Offset(0.0, 0.0),
-                              blurRadius: 6.0,
+                              blurRadius: blurRadius,
                             ),
                           ],
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(16.0),
                           child: AspectRatio(
-                            aspectRatio: 1.28,
+                            aspectRatio: ratio,
                             child: Image.asset(category!.imagePath),
                           ),
                         ),

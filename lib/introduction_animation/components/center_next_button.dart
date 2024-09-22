@@ -33,7 +33,7 @@ class _CenterNextButtonState extends State<CenterNextButton> {
   Future<void> _loadPreferences() async {
     final mode = await DatabaseHelper().getPreference();
     setState(() {
-      _isLargeTextMode = mode == 'large';
+      _isLargeTextMode = mode == 'largePolice';
     });
   }
 
@@ -75,7 +75,6 @@ class _CenterNextButtonState extends State<CenterNextButton> {
       ),
     );
 
-    // Ajuste les tailles de texte en fonction de _isLargeTextMode
     double adjustedTextSize =
         _isLargeTextMode ? widget.textSize * 1.5 : widget.textSize;
 
@@ -148,10 +147,10 @@ class _CenterNextButtonState extends State<CenterNextButton> {
                                       Text(
                                         'Créer un compte',
                                         style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: adjustedTextSize.sp,
-                                          fontWeight: FontWeight.w500,
-                                        ),
+                                            color: Colors.white,
+                                            fontSize: adjustedTextSize.sp,
+                                            fontWeight: FontWeight.w500,
+                                            fontFamily: 'Jersey'),
                                       ),
                                       const Icon(Icons.arrow_forward_rounded,
                                           color: Colors.white),
@@ -188,18 +187,18 @@ class _CenterNextButtonState extends State<CenterNextButton> {
                       Text(
                         'Déjà un compte? ',
                         style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: (adjustedTextSize - 2).sp,
-                          fontWeight: FontWeight.normal,
-                        ),
+                            color: Colors.grey,
+                            fontSize: (adjustedTextSize - 2).sp,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'Jersey'),
                       ),
                       Text(
                         'Se connecter',
                         style: TextStyle(
-                          color: const Color(0xff132137),
-                          fontSize: adjustedTextSize.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
+                            color: const Color(0xff132137),
+                            fontSize: adjustedTextSize.sp,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'Jersey'),
                       ),
                     ],
                   ),

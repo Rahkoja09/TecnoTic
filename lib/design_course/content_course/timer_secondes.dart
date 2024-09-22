@@ -4,9 +4,12 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 
 import 'package:ticeo/design_course/content_course/principal_content.dart';
+import 'package:ticeo/design_course/models/category.dart';
 
 class CountdownTimerScreen extends StatefulWidget {
-  const CountdownTimerScreen({super.key});
+  final String title;
+
+  const CountdownTimerScreen({super.key, required this.title});
 
   @override
   _CountdownTimerScreenState createState() => _CountdownTimerScreenState();
@@ -42,10 +45,13 @@ class _CountdownTimerScreenState extends State<CountdownTimerScreen> {
   }
 
   void navigateToPrincipalContent() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const Principal_content()),
-    );
+    // Navigator.pushReplacement(
+    //   context,
+    //   MaterialPageRoute(
+    //       builder: (context) => Principal_content(
+    //             titre: widget.title,
+    //           )),
+    // );
   }
 
   @override

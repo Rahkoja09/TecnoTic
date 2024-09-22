@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:ticeo/components/database_gest/database_helper.dart';
 import 'package:ticeo/components/state/provider_state.dart';
 import 'package:ticeo/home/home.dart';
 import 'package:ticeo/introduction_animation/introduction_animation_screen.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class ModeSelectionPage extends StatefulWidget {
   const ModeSelectionPage({super.key});
@@ -16,7 +16,15 @@ class ModeSelectionPage extends StatefulWidget {
 
 class _ModeSelectionPageState extends State<ModeSelectionPage> {
   final List<bool> _selections = List.generate(3, (_) => false);
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  static const platform = MethodChannel('accessibility_service');
+  bool _isLargeTextMode = false;
+
+  Future<void> _loadPreferences() async {
+    final mode = await DatabaseHelper().getPreference();
+    setState(() {
+      _isLargeTextMode = mode == 'largePolice';
+    });
+  }
 
   @override
   void initState() {
@@ -30,37 +38,20 @@ class _ModeSelectionPageState extends State<ModeSelectionPage> {
     String? mode = await dbHelper.getPreference();
     if (mode != null) {
       _navigateToHomeScreen();
-    } else {
-      _playWelcomeVoice();
     }
   }
 
-  Future<void> _playWelcomeVoice() async {
-    await _audioPlayer.play(AssetSource('sounds/assistance_bienvenue.aac'));
-  }
-
-  Future<void> _stopWelcomeVoice() async {
-    await _audioPlayer.stop();
-  }
-
-  void _handleSelection() async {
-    String mode = '';
-
-    if (_selections[0] && _selections[1]) {
-      mode = 'largeAndTalk';
-    } else if (_selections[0]) {
-      mode = 'talkback';
-    } else if (_selections[1]) {
-      mode = 'largePolice';
-    } else {
-      mode = 'normal';
-    }
-
-    // Enregistrez le mode sélectionné dans la base de données
+  Future<void> saveOrUpdatePreference(String mode) async {
     DatabaseHelper dbHelper = DatabaseHelper();
-    await dbHelper.insertPreference(mode);
+    String? existingPreference = await dbHelper.getPreference();
 
-    _navigateToHomeScreen();
+    if (existingPreference != null && existingPreference.isNotEmpty) {
+      await dbHelper.updatePreference(mode);
+      print('Préférence mise à jour : $mode');
+    } else {
+      await dbHelper.insertPreference(mode);
+      print('Nouvelle préférence insérée : $mode');
+    }
   }
 
   void _navigateToHomeScreen() {
@@ -80,6 +71,34 @@ class _ModeSelectionPageState extends State<ModeSelectionPage> {
         },
       ),
     );
+  }
+
+  Future<void> _checkTalkBackStatus() async {
+    bool isTalkBackEnabled;
+    try {
+      final bool result = await platform.invokeMethod('isTalkBackEnabled');
+      isTalkBackEnabled = result;
+      if (!isTalkBackEnabled) {
+        _checkIfModePageSeen();
+        Future.delayed(const Duration(seconds: 1), () {
+          _requestTalkBackActivation();
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('TalkBack est déjà activé')),
+        );
+      }
+    } on PlatformException catch (e) {
+      print("Erreur lors de la vérification de TalkBack: ${e.message}");
+    }
+  }
+
+  Future<void> _requestTalkBackActivation() async {
+    try {
+      await platform.invokeMethod('requestTalkBackActivation');
+    } on PlatformException catch (e) {
+      print("Erreur lors de la demande d'activation de TalkBack: ${e.message}");
+    }
   }
 
   @override
@@ -113,14 +132,6 @@ class _ModeSelectionPageState extends State<ModeSelectionPage> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(
-                height: 20.0,
-              ),
-              IconButton(
-                icon: const Icon(Icons.volume_off),
-                onPressed: _stopWelcomeVoice,
-                tooltip: 'Muet, faire taire l\'assistante',
-              ),
               const SizedBox(height: 20.0),
               _buildOptionButton(
                 context,
@@ -138,9 +149,28 @@ class _ModeSelectionPageState extends State<ModeSelectionPage> {
                 2,
               ),
               const SizedBox(height: 10.0),
+              const Text(
+                '',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Color.fromARGB(255, 58, 58, 59),
+                  fontSize: 16.0,
+                ),
+              ),
               const SizedBox(height: 20.0),
               ElevatedButton(
-                onPressed: _handleSelection,
+                onPressed: () {
+                  if (_selections[0]) {
+                    _checkTalkBackStatus();
+                    saveOrUpdatePreference('largePolice');
+                  } else if (_selections[1]) {
+                    _navigateToHomeScreen();
+                    saveOrUpdatePreference('largePolice');
+                  } else if (_selections[2]) {
+                    _navigateToHomeScreen();
+                    saveOrUpdatePreference('normale');
+                  }
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey[800],
                   shape: RoundedRectangleBorder(
@@ -152,7 +182,7 @@ class _ModeSelectionPageState extends State<ModeSelectionPage> {
                   child: Text(
                     'Suivant',
                     style: TextStyle(
-                      fontSize: 26,
+                      fontSize: 26.0,
                       color: Colors.white,
                     ),
                   ),
@@ -203,7 +233,7 @@ class _ModeSelectionPageState extends State<ModeSelectionPage> {
             Text(
               title,
               style: const TextStyle(
-                fontSize: 24.0,
+                fontSize: 28.0,
                 fontWeight: FontWeight.bold,
               ),
             ),

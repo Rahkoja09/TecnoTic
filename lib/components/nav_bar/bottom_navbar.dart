@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
+import 'package:ticeo/TaskMentoring/screens/home_page.dart';
+import 'package:ticeo/chat/chat.dart';
+import 'package:ticeo/components/Theme/ThemeProvider.dart';
 import 'package:ticeo/components/database_gest/database_helper.dart';
 import 'package:ticeo/home/home.dart';
 import 'package:ticeo/design_course/welcome_view.dart';
 import 'package:ticeo/mentoring/mentoring_home.dart';
+import 'package:ticeo/mentoring/welcome_view.dart';
+import 'package:ticeo/profilMentoring/ui/profile/profile_screen.dart';
 import 'package:ticeo/settings/settingsHome.dart';
 
 class GoogleBottomBar extends StatefulWidget {
@@ -15,12 +22,13 @@ class GoogleBottomBar extends StatefulWidget {
 
 class _GoogleBottomBarState extends State<GoogleBottomBar> {
   int _selectedIndex = 0;
-  late bool isLargeTextMode;
+  bool isLargeTextMode = false;
 
   @override
   void initState() {
     super.initState();
-    isLargeTextMode = false;
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
+        overlays: [SystemUiOverlay.bottom]);
     _loadPreferences();
   }
 
@@ -29,7 +37,7 @@ class _GoogleBottomBarState extends State<GoogleBottomBar> {
     String? mode = await dbHelper.getPreference();
 
     setState(() {
-      isLargeTextMode = mode == 'large' || mode == 'largeAndTalk';
+      isLargeTextMode = mode == 'largePolice';
     });
   }
 
@@ -41,16 +49,17 @@ class _GoogleBottomBarState extends State<GoogleBottomBar> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Provider.of<ThemeProvider>(context).currentTheme;
     final List<Widget> screens = [
       const HomeScreen(),
       const HomePage(),
-      MentoringHomePage(),
-      SettingsPage(),
+      const HomePageMentor(),
+      ProfileScreen(),
     ];
 
     return Scaffold(
       body: screens[_selectedIndex],
-      backgroundColor: Color.fromARGB(255, 255, 255, 255),
+      backgroundColor: theme.scaffoldBackgroundColor,
       bottomNavigationBar: SalomonBottomBar(
         currentIndex: _selectedIndex,
         selectedItemColor: const Color(0xff6200ee),
@@ -58,36 +67,77 @@ class _GoogleBottomBarState extends State<GoogleBottomBar> {
         onTap: (index) {
           navigateTo(index);
         },
-        items: _navBarItems,
+        items: _navBarItems(
+            isLargeTextMode, theme, context), // Passer isLargeTextMode ici
       ),
     );
   }
 }
 
-final _navBarItems = [
-  SalomonBottomBarItem(
-    icon: const Icon(Icons.home_rounded,
-        color: Color.fromARGB(255, 91, 153, 194)),
-    title: const Text("Accueil"),
-    selectedColor: Color.fromARGB(255, 106, 106, 106),
-  ),
-  SalomonBottomBarItem(
-    icon: const Icon(
-      Icons.book_rounded,
-      color: Color.fromARGB(255, 91, 153, 194),
+// Passer isLargeTextMode à cette fonction pour ajuster dynamiquement
+List<SalomonBottomBarItem> _navBarItems(
+    bool isLargeTextMode, ThemeData theme, BuildContext context) {
+  return [
+    SalomonBottomBarItem(
+      icon: Icon(
+        Icons.home_rounded,
+        size: isLargeTextMode ? 34.0 : 24.0,
+        color: Theme.of(context).textTheme.bodyText1?.color,
+      ),
+      title: Text(
+        "Accueil",
+        style: TextStyle(
+          fontSize: isLargeTextMode ? 22.0 : 14.0,
+          color: Theme.of(context).textTheme.bodyText1?.color,
+        ),
+      ),
+      selectedColor: const Color.fromARGB(255, 106, 106, 106),
     ),
-    title: const Text("Cours"),
-    selectedColor: const Color.fromARGB(255, 106, 106, 106),
-  ),
-  SalomonBottomBarItem(
-    icon:
-        const Icon(Icons.person_pin, color: Color.fromARGB(255, 91, 153, 194)),
-    title: const Text("Mentorat"),
-    selectedColor: const Color.fromARGB(255, 106, 106, 106),
-  ),
-  SalomonBottomBarItem(
-    icon: const Icon(Icons.today, color: Color.fromARGB(255, 91, 153, 194)),
-    title: const Text("Paramettre"),
-    selectedColor: const Color.fromARGB(255, 106, 106, 106),
-  ),
-];
+    SalomonBottomBarItem(
+      icon: Icon(
+        Icons.book_rounded,
+        size: isLargeTextMode ? 34.0 : 24.0,
+        color: Theme.of(context).textTheme.bodyText1?.color,
+      ),
+      title: Text(
+        "Cours",
+        style: TextStyle(
+          fontSize: isLargeTextMode ? 22.0 : 14.0,
+          color: Theme.of(context).textTheme.bodyText1?.color,
+        ),
+      ),
+      selectedColor: const Color.fromARGB(255, 106, 106, 106),
+    ),
+    SalomonBottomBarItem(
+      icon: Icon(
+        Icons.person_pin,
+        size: isLargeTextMode ? 34.0 : 24.0,
+        color: Theme.of(context).textTheme.bodyText1?.color,
+      ),
+      title: Text(
+        "Mentorat",
+        style: TextStyle(
+          fontSize: isLargeTextMode ? 22.0 : 14.0,
+          color: Theme.of(context).textTheme.bodyText1?.color,
+        ),
+      ),
+      selectedColor: const Color.fromARGB(255, 106, 106, 106),
+    ),
+    SalomonBottomBarItem(
+      icon: Icon(
+        Icons.person,
+        size: isLargeTextMode ? 34.0 : 24.0,
+        color: Theme.of(context).textTheme.bodyText1?.color,
+      ),
+      title: Text(
+        "Profil",
+        style: TextStyle(
+          fontSize: isLargeTextMode ? 22.0 : 14.0,
+          color: Theme.of(context).textTheme.bodyText1?.color,
+        ),
+      ),
+      selectedColor: const Color.fromARGB(255, 106, 106, 106),
+    ),
+    
+  ];
+}

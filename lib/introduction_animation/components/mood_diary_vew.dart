@@ -4,11 +4,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 class MoodDiaryView extends StatelessWidget {
   final AnimationController animationController;
   final double textSize;
+  final double TietletextSize;
 
   const MoodDiaryView({
     super.key,
     required this.animationController,
     required this.textSize,
+    required this.TietletextSize,
   });
 
   @override
@@ -85,12 +87,11 @@ class MoodDiaryView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                "Planification",
+                "Personalisation",
                 style: TextStyle(
-                  fontSize: textSize
-                      .sp, // Utiliser textSize.sp pour ajuster la taille
-                  fontWeight: FontWeight.bold,
-                ),
+                    fontSize: TietletextSize.sp,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: 'Jersey'),
               ),
               SlideTransition(
                 position: moodFirstHalfAnimation,
@@ -100,7 +101,7 @@ class MoodDiaryView extends StatelessWidget {
                     padding: EdgeInsets.only(
                         left: 20.w, right: 20.w, top: 16.h, bottom: 16.h),
                     child: Text(
-                      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore",
+                      "On vous propose des pérsonnalisations adapter à vos besoin visuel",
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           fontSize: textSize.sp), // Ajuster la taille du texte

@@ -2,8 +2,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
+import 'package:ticeo/components/Theme/ThemeProvider.dart';
+import 'package:ticeo/components/database_gest/database_helper.dart';
 import 'package:ticeo/design_course/category_list_view.dart';
 import 'package:ticeo/design_course/course_info_screen.dart';
+import 'package:ticeo/design_course/models/category.dart';
 import 'package:ticeo/design_course/popular_course_list_view.dart';
 import 'design_course_app_theme.dart';
 
@@ -15,12 +19,32 @@ class DesignCourseHomeScreen extends StatefulWidget {
 
 class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
   CategoryType categoryType = CategoryType.ui;
+  bool _isLargeTextMode = false;
+  String imageUrl = '';
+
+  Future<void> _loadPreferences() async {
+    final mode = await DatabaseHelper().getPreference();
+    var infoUser = await DatabaseHelper().getUser();
+    if (infoUser!.isNotEmpty) {
+      imageUrl = infoUser.first['profileImageUrl'];
+    }
+    setState(() {
+      _isLargeTextMode = mode == 'largePolice';
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Provider.of<ThemeProvider>(context).currentTheme;
     ScreenUtil.init(context, designSize: const Size(360, 690));
     return Container(
-      color: DesignCourseAppTheme.nearlyWhite,
+      color: theme.scaffoldBackgroundColor,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Column(
@@ -52,6 +76,7 @@ class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
   }
 
   Widget getCategoryUI() {
+    double fonttitlesize = _isLargeTextMode ? 34.sp : 26.sp;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -61,13 +86,13 @@ class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
           child: Text(
             'Modules/séances',
             textAlign: TextAlign.left,
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-              fontSize: 26.0.sp,
-              fontFamily: 'Jersey',
-              letterSpacing: 0.27,
-              color: DesignCourseAppTheme.darkerText,
-            ),
+            style: Theme.of(context).textTheme.bodyText1?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  fontSize: fonttitlesize,
+                  fontFamily: 'Jersey',
+                  letterSpacing: 0.27,
+                  color: Theme.of(context).textTheme.bodyText1?.color,
+                ),
           ),
         ),
         SizedBox(
@@ -94,16 +119,13 @@ class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
         SizedBox(
           height: 16.0.h,
         ),
-        CategoryListView(
-          callBack: () {
-            moveTo();
-          },
-        ),
+        const CategoryListView(),
       ],
     );
   }
 
   Widget getPopularCourseUI() {
+    double fonttitlesize = _isLargeTextMode ? 34.sp : 26.sp;
     return Padding(
       padding: EdgeInsets.only(top: 8.0.h, left: 18.0.w, right: 16.0.w),
       child: Column(
@@ -113,18 +135,18 @@ class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
           Text(
             'Modules Permetic A',
             textAlign: TextAlign.left,
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-              fontSize: 26.0.sp,
-              fontFamily: 'Jersey',
-              letterSpacing: 0.27,
-              color: DesignCourseAppTheme.darkerText,
-            ),
+            style: Theme.of(context).textTheme.bodyText1?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  fontSize: fonttitlesize,
+                  fontFamily: 'Jersey',
+                  letterSpacing: 0.27,
+                  color: Theme.of(context).textTheme.bodyText1?.color,
+                ),
           ),
           Flexible(
             child: PopularCourseListView(
-              callBack: () {
-                moveTo();
+              callBack: (Category category) {
+                moveTo(category);
               },
             ),
           )
@@ -133,16 +155,15 @@ class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
     );
   }
 
-  void moveTo() {
-    Navigator.push<dynamic>(
-      context,
-      MaterialPageRoute<dynamic>(
-        builder: (BuildContext context) => const CourseInfoScreen(),
-      ),
-    );
+  void moveTo(Category category) {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => CourseInfoScreen(category: category)));
   }
 
   Widget getButtonUI(CategoryType categoryTypeData, bool isSelected) {
+    double fontSectionsize = _isLargeTextMode ? 20.sp : 12.sp;
     String txt = '';
     if (CategoryType.ui == categoryTypeData) {
       txt = 'MS Word';
@@ -155,10 +176,10 @@ class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
       child: Container(
         decoration: BoxDecoration(
             color: isSelected
-                ? DesignCourseAppTheme.nearlyBlue
+                ? Color.fromARGB(255, 19, 75, 120)
                 : DesignCourseAppTheme.nearlyWhite,
             borderRadius: BorderRadius.all(Radius.circular(24.0.sp)),
-            border: Border.all(color: DesignCourseAppTheme.nearlyBlue)),
+            border: Border.all(color: Color.fromARGB(255, 19, 75, 120))),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
@@ -178,11 +199,11 @@ class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
                   textAlign: TextAlign.left,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    fontSize: 12.sp,
+                    fontSize: fontSectionsize,
                     letterSpacing: 0.27,
                     color: isSelected
-                        ? DesignCourseAppTheme.nearlyWhite
-                        : DesignCourseAppTheme.nearlyBlue,
+                        ? Theme.of(context).textTheme.bodyText1?.color
+                        : Color.fromARGB(255, 19, 75, 120),
                   ),
                 ),
               ),
@@ -194,6 +215,7 @@ class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
   }
 
   Widget getSearchBarUI() {
+    double fontresearchsize = _isLargeTextMode ? 22.sp : 16.sp;
     return Padding(
       padding: EdgeInsets.only(top: 8.0.h, left: 18.0.w),
       child: Row(
@@ -207,7 +229,7 @@ class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
               padding: EdgeInsets.only(top: 8.0.h, bottom: 8.0.h),
               child: Container(
                 decoration: BoxDecoration(
-                  color: const Color.fromARGB(14, 41, 41, 41),
+                  color: const Color(0xffd2d1e1).withOpacity(.3),
                   borderRadius: BorderRadius.only(
                     bottomRight: Radius.circular(13.0.r),
                     bottomLeft: Radius.circular(13.0.r),
@@ -225,7 +247,7 @@ class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
                             fontFamily: 'WorkSans',
                             fontWeight: FontWeight.bold,
                             fontSize: 16.0.sp,
-                            color: const Color.fromARGB(170, 60, 59, 59),
+                            color: Color.fromARGB(255, 126, 123, 123),
                           ),
                           keyboardType: TextInputType.text,
                           decoration: InputDecoration(
@@ -233,14 +255,14 @@ class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
                             border: InputBorder.none,
                             helperStyle: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 16.0.sp,
+                              fontSize: fontresearchsize,
                               color: const Color.fromARGB(255, 22, 190, 28),
                             ),
                             labelStyle: TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 16.0.sp,
                               letterSpacing: 0.2,
-                              color: const Color.fromARGB(72, 146, 146, 146),
+                              color: Color.fromARGB(255, 162, 162, 162),
                             ),
                           ),
                           onEditingComplete: () {},
@@ -252,7 +274,7 @@ class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
                       height: 60.0.h,
                       child: Icon(
                         Icons.search,
-                        color: const Color.fromARGB(255, 74, 74, 75),
+                        color: Color.fromARGB(255, 136, 136, 136),
                       ),
                     )
                   ],
@@ -269,6 +291,9 @@ class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
   }
 
   Widget getAppBarUI() {
+    double fonttitlesize = _isLargeTextMode ? 34.sp : 26.sp;
+    double fontChoisissezsize = _isLargeTextMode ? 26.sp : 18.sp;
+    double imageRadusSize = _isLargeTextMode ? 34.sp : 24.sp;
     return Padding(
       padding: EdgeInsets.only(top: 8.0.h, left: 18.0.w, right: 18.0.w),
       child: Row(
@@ -279,33 +304,33 @@ class _DesignCourseHomeScreenState extends State<DesignCourseHomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  'Choisissez votre cours',
+                  'Choisissez votre :',
                   textAlign: TextAlign.left,
                   style: TextStyle(
                     fontWeight: FontWeight.w400,
-                    fontSize: 18.0.sp,
+                    fontSize: fontChoisissezsize,
                     fontFamily: 'Jersey',
                     letterSpacing: 0.2,
-                    color: DesignCourseAppTheme.grey,
+                    color: Theme.of(context).textTheme.bodyText1?.color,
                   ),
                 ),
                 Text(
-                  'Cours et mentorat de TIC-eo',
+                  'Cours et mentorat de Tecno-Tic',
                   textAlign: TextAlign.left,
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
-                    fontSize: 26.0.sp,
+                    fontSize: fonttitlesize,
                     fontFamily: 'Jersey',
                     letterSpacing: 0.27,
-                    color: DesignCourseAppTheme.darkerText,
+                    color: Theme.of(context).textTheme.bodyText1?.color,
                   ),
                 ),
               ],
             ),
           ),
           CircleAvatar(
-            radius: 30.0.r,
-            backgroundImage: AssetImage('assets/design_course/pdp.jpg'),
+            radius: imageRadusSize,
+            backgroundImage: NetworkImage(imageUrl),
           )
         ],
       ),

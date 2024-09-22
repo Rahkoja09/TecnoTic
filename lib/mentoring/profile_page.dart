@@ -1,8 +1,14 @@
+// ignore_for_file: avoid_print, deprecated_member_use
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ticeo/components/database_gest/database_helper.dart';
 import 'package:ticeo/mentoring/helper/color.dart';
-import 'package:ticeo/mentoring/helper/constants.dart';
 import 'package:ticeo/mentoring/model/mentor_model.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -15,6 +21,275 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   bool _isStarred = false;
+
+  String idUserDmd = "";
+  String nameUserDemande = '';
+  String contactUserDemande = '';
+  String contactMentor = '';
+  String reason = 'Demande de mentoring';
+  String UrlPhotoUser = '';
+  bool isLargeTextMode = false;
+  int isMentor = 0;
+  bool isRequestAvailable = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkMentoringRequestAvailability();
+    _checkIfRated(widget.model!.details.contact);
+    _initializeData();
+  }
+
+  Future<void> _checkMentoringRequestAvailability() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    // Récupérer la date de la dernière demande
+    String? lastRequestDate = prefs.getString('lastMentorRequestDate');
+
+    DateTime now = DateTime.now();
+    DateTime nextMidnight = DateTime(now.year, now.month, now.day + 1);
+
+    if (lastRequestDate == null) {
+      setState(() {
+        isRequestAvailable = true;
+      });
+      return;
+    }
+
+    DateTime lastRequestDateTime = DateTime.parse(lastRequestDate);
+
+    if (lastRequestDateTime.isBefore(nextMidnight)) {
+      setState(() {
+        isRequestAvailable = false;
+      });
+    } else {
+      setState(() {
+        isRequestAvailable = true;
+      });
+    }
+  }
+
+  Future<void> _initializeData() async {
+    await _loadPreferences();
+    await getUser();
+    await getMentor();
+    setState(() {
+      // Force la mise à jour de l'état après que toutes les données aient été chargées
+    });
+  }
+
+  Future<void> _loadPreferences() async {
+    final mode = await DatabaseHelper().getPreference();
+    setState(() {
+      isLargeTextMode = mode == 'largePolice';
+    });
+  }
+
+  List<Map<String, String>> _parseAccomplishments(String accomplishments) {
+    List<Map<String, String>> parsedAccomplishments = [];
+    final RegExp exp = RegExp(r'([^:]+):\s*([^.]*)\.', multiLine: true);
+    final Iterable<RegExpMatch> matches = exp.allMatches(accomplishments);
+
+    for (final match in matches) {
+      final title = match.group(1)?.trim() ?? 'Titre non disponible';
+      final description =
+          match.group(2)?.trim() ?? 'Description non disponible';
+      parsedAccomplishments.add({'title': title, 'description': description});
+    }
+
+    return parsedAccomplishments;
+  }
+
+  Future<void> _addRate(String contact) async {
+    try {
+      // Rechercher le document du mentor via le champ 'contact'
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('Mentors')
+          .where('contact', isEqualTo: contact)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        // Récupérer le premier document trouvé
+        DocumentSnapshot mentorSnapshot = querySnapshot.docs.first;
+        DocumentReference mentorRef = mentorSnapshot.reference;
+
+        // Obtenir les données actuelles
+        int currentRates =
+            (mentorSnapshot.data() as Map<String, dynamic>)['rates'];
+
+        if (currentRates == 12) {
+          print('vous êtes déjà un super mentor');
+        } else if (currentRates < 12) {
+          await mentorRef.update({
+            'rates': currentRates + 1,
+          });
+        }
+
+        // Mettre à jour l'information pour l'utilisateur qu'il a déjà noté ce mentor
+        await FirebaseFirestore.instance
+            .collection('Utilisateurs')
+            .doc(idUserDmd) // ID utilisateur
+            .set({
+          'ratedMentors':
+              FieldValue.arrayUnion([contact]), // Ajouter le mentor à la liste
+        }, SetOptions(merge: true));
+
+        print('Rates updated successfully!');
+      } else {
+        print('Mentor not found with contact: $contact');
+      }
+    } catch (e) {
+      print('Error updating rates: $e');
+    }
+  }
+
+  bool _isStarVisible = true;
+
+  Future<void> _checkIfRated(String contact) async {
+    try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+
+      if (currentUser != null) {
+        String idUserDmd = currentUser.uid;
+
+        DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
+            .collection('Utilisateurs')
+            .doc(idUserDmd)
+            .get();
+
+        if (userSnapshot.exists) {
+          List<dynamic> ratedMentors =
+              (userSnapshot.data() as Map<String, dynamic>)['ratedMentors'] ??
+                  [];
+          if (ratedMentors.contains(contact)) {
+            setState(() {
+              _isStarVisible = false;
+            });
+          }
+        }
+      } else {
+        print('Utilisateur non connecté');
+      }
+    } catch (e) {
+      print('Error checking if mentor is rated: $e');
+    }
+  }
+
+  Future<void> getMentor() async {
+    await getIsMentor();
+    if (isMentor == 1) {
+      var infoMentor = await DatabaseHelper().getMentor();
+      if (infoMentor!.isNotEmpty) {
+        contactMentor = infoMentor.first['Contact'];
+      }
+    } else {
+      contactMentor = 'SureToNotCorrEspond!?.';
+      print(contactMentor);
+    }
+  }
+
+  Future<void> getUser() async {
+    var infoUser = await DatabaseHelper().getUser();
+    if (infoUser!.isNotEmpty) {
+      idUserDmd = infoUser.first['idFireBase'];
+      nameUserDemande = infoUser.first['nom'];
+      contactUserDemande = infoUser.first['telephone'];
+      UrlPhotoUser = infoUser.first['profileImageUrl'];
+    } else {
+      print(
+          "Erreur lors de la recuperation des information utilisateur dans local_db.db");
+    }
+  }
+
+  Future<void> getIsMentor() async {
+    var infoUser = await DatabaseHelper().getUser();
+    if (infoUser!.isNotEmpty) {
+      isMentor = infoUser.first['isMentor'];
+    } else {
+      print(
+          "Erreur lors de la recuperation des information utilisateur dans local_db.db");
+    }
+  }
+
+  Future<void> SendDemandeMentoring(
+      String idUserDmd, String reason, String contact) async {
+    if (!isRequestAvailable) return;
+    try {
+      // Récupérer le nom de l'utilisateur à partir de son idFirebase
+      DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
+          .collection('Utilisateurs')
+          .doc(idUserDmd)
+          .get();
+      if (!userSnapshot.exists) {
+        print("Utilisateur introuvable");
+        return;
+      }
+
+      // Rechercher le mentor correspondant au contact donné dans la collection 'Mentors'
+      QuerySnapshot mentorQuery = await FirebaseFirestore.instance
+          .collection('Mentors')
+          .where('contact', isEqualTo: contact)
+          .get();
+
+      if (mentorQuery.docs.isEmpty) {
+        print("Aucun mentor trouvé avec ce contact");
+        return;
+      }
+
+      // Récupérer le document du mentor
+      DocumentReference mentorRef = mentorQuery.docs.first.reference;
+
+      // Accéder au champ 'Notifications' du document du mentor
+      DocumentSnapshot mentorSnapshot = await mentorRef.get();
+      Map<String, dynamic> notifications =
+          (mentorSnapshot.data() as Map<String, dynamic>)['Notifications'] ??
+              {};
+
+      // Trouver la dernière notification 'notifX' existante
+      int lastNotifIndex = -1;
+      notifications.forEach((key, value) {
+        if (key.startsWith('notif')) {
+          int index = int.tryParse(key.substring(5)) ?? -1;
+          if (index > lastNotifIndex) {
+            lastNotifIndex = index;
+          }
+        }
+      });
+
+      // Créer le nom de la nouvelle notification (notifX+1)
+      String newNotifKey = 'notif${lastNotifIndex + 1}';
+
+      // Récupérer la date et l'heure actuelles
+      DateTime now = DateTime.now();
+      String formattedDate = DateFormat('yyyy-MM-dd – kk:mm').format(now);
+
+      // Ajouter la nouvelle notification avec 'NameUserDemande' et 'Reason'
+      notifications[newNotifKey] = {
+        'DateDemande': formattedDate,
+        'idUserDemande': idUserDmd,
+        'Contact': contactUserDemande,
+        'NameUserDemande': nameUserDemande,
+        'UserPhoto': UrlPhotoUser,
+        'Reason': reason,
+      };
+
+      // Mettre à jour le document avec la nouvelle notification
+      await mentorRef.update({'Notifications': notifications});
+
+      // Enregistrer l'heure de la demande
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+          'lastMentorRequestDate', DateTime.now().toIso8601String());
+
+      setState(() {
+        isRequestAvailable = false;
+      });
+
+      print("Notification ajoutée avec succès !");
+    } catch (e) {
+      print("Erreur lors de l'envoi de la demande de mentoring : $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +308,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 _description(),
                 SizedBox(height: 20.h),
                 _achivment(),
-                _button(),
+                if (contactMentor != widget.model?.details.contact) _button(),
                 SizedBox(height: 20.h),
               ],
             ),
@@ -52,22 +327,30 @@ class _ProfilePageState extends State<ProfilePage> {
           },
           child: Container(
             padding: EdgeInsets.symmetric(vertical: 12.h),
-            child: Icon(Icons.arrow_back, size: 24.sp),
+            child: Icon(
+              Icons.arrow_back,
+              size: isLargeTextMode ? 32.sp : 24.sp,
+            ),
           ),
         ),
         Spacer(),
-        IconButton(
-          icon: Icon(
-            _isStarred ? Icons.star : Icons.star_border,
-            color: _isStarred ? Colors.blue : Colors.grey,
-            size: 24.sp,
+        if (_isStarVisible && contactMentor != widget.model?.details.contact)
+          IconButton(
+            icon: Icon(
+              _isStarred ? Icons.star : Icons.star_border,
+              color: _isStarred
+                  ? Colors.blue
+                  : Theme.of(context).textTheme.bodyText1?.color,
+              size: isLargeTextMode ? 32.sp : 24.sp,
+            ),
+            onPressed: () {
+              _addRate(widget.model!.details.contact);
+              setState(() {
+                _isStarred = !_isStarred;
+                _isStarVisible = false;
+              });
+            },
           ),
-          onPressed: () {
-            setState(() {
-              _isStarred = !_isStarred;
-            });
-          },
-        ),
       ],
     );
   }
@@ -85,14 +368,16 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Row(
           children: <Widget>[
             Container(
-              height: 85.h,
-              width: 85.w,
+              height: isLargeTextMode ? 120.h : 85.h,
+              width: isLargeTextMode ? 120.w : 85.w,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10.r),
                 image: DecorationImage(
-                  image: widget.model?.image != null
-                      ? AssetImage(widget.model!.image)
-                      : AssetImage("assets/images/deffault_profil.jpg"),
+                  image: NetworkImage(widget.model!.image),
+                  onError: (error, stackTrace) {
+                    print('Error loading image: $error');
+                  },
+                  fit: BoxFit.cover,
                 ),
                 boxShadow: <BoxShadow>[
                   BoxShadow(
@@ -115,14 +400,15 @@ class _ProfilePageState extends State<ProfilePage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Icon(Icons.star_outline_rounded,
-                            color: MColor.yellow, size: 15.sp),
+                        Icon(Icons.phone,
+                            color: MColor.yellow,
+                            size: isLargeTextMode ? 28.sp : 15.sp),
                         SizedBox(height: 5.h),
-                        Text("${widget.model?.ratings}/hr",
-                            style: GoogleFonts.inter(
-                              fontWeight: FontWeight.w300,
-                              fontSize: 10.sp,
-                            )),
+                        // Text("${widget.model?.details.heure ?? 'test'} heures",
+                        //     style: GoogleFonts.inter(
+                        //       fontWeight: FontWeight.w300,
+                        //       fontSize: 12.sp,
+                        //     )),
                       ],
                     ),
                     SizedBox(width: 12.w),
@@ -130,14 +416,17 @@ class _ProfilePageState extends State<ProfilePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: <Widget>[
-                        Text("Reviews",
-                            style: GoogleFonts.inter(fontSize: 8.sp)),
-                        SizedBox(height: 8.h),
-                        Text("1500",
+                        Text("Contact ",
                             style: GoogleFonts.inter(
-                                fontWeight: FontWeight.w300,
-                                fontSize: 10.sp,
-                                color: Colors.black54)),
+                                fontSize: isLargeTextMode ? 18.sp : 10.sp)),
+                        SizedBox(height: 8.h),
+                        Text(widget.model?.details.contact ?? '',
+                            style: GoogleFonts.inter(
+                              fontWeight: FontWeight.w300,
+                              fontSize: isLargeTextMode ? 18.sp : 12.sp,
+                              color:
+                                  Theme.of(context).textTheme.bodyText1?.color,
+                            )),
                       ],
                     ),
                   ],
@@ -150,77 +439,140 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _description() {
     return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        if (isLargeTextMode)
           Row(
             children: <Widget>[
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    widget.model?.name ?? "Nom non disponible",
-                    style: TextStyle(
-                        fontSize: 20.sp,
-                        fontWeight: FontWeight.w500,
-                        height: 1.3,
-                        fontFamily: "Jersey"),
-                  ),
-                  Text(widget.model?.type ?? "Type non disponible",
+              Expanded(
+                child: Column(
+                  // Ajout de Column ici pour afficher de haut en bas
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      widget.model?.name ?? "Nom non disponible",
+                      style: TextStyle(
+                          fontSize: isLargeTextMode ? 28.sp : 20.sp,
+                          fontWeight: FontWeight.w500,
+                          height: 1.3,
+                          fontFamily: "Jersey"),
+                      softWrap: true,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      "\Ar ${widget.model?.price ?? '00.0'}",
                       style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w300,
-                          fontSize: 10.sp,
-                          color: Colors.black54)),
-                ],
-              ),
-              Spacer(),
-              Text("\Ar ${widget.model?.price ?? '00.0'}",
-                  style: GoogleFonts.inter(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 14.sp,
-                      color: Color.fromARGB(255, 17, 169, 224))),
+                        fontWeight: FontWeight.w500,
+                        fontSize: isLargeTextMode ? 20.sp : 14.sp,
+                        color: Theme.of(context).textTheme.bodyText1?.color,
+                      ),
+                    ),
+                    Text(
+                      widget.model?.type ?? "Type non disponible",
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w300,
+                        fontSize: isLargeTextMode ? 18.sp : 10.sp,
+                        color: Theme.of(context).textTheme.bodyText1?.color,
+                      ),
+                    ),
+                  ],
+                ),
+              )
             ],
           ),
-          SizedBox(height: 20.h),
-          Text(
-            'A propos de ${widget.model?.name.split(" ")[0] ?? 'Mentor'}',
-            style: TextStyle(
-                fontSize: 25.sp,
-                fontWeight: FontWeight.w500,
-                height: 1.3,
-                fontFamily: "Jersey"),
+        if (!isLargeTextMode)
+          Row(
+            children: <Widget>[
+              Expanded(
+                // Ajout de Expanded ici
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      widget.model?.name ?? "Nom non disponible",
+                      style: TextStyle(
+                          fontSize: isLargeTextMode ? 28.sp : 20.sp,
+                          fontWeight: FontWeight.w500,
+                          height: 1.3,
+                          fontFamily: "Jersey"),
+                      softWrap: true,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      widget.model?.type ?? "Type non disponible",
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w300,
+                        fontSize: isLargeTextMode ? 18.sp : 10.sp,
+                        color: Theme.of(context).textTheme.bodyText1?.color,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Spacer(),
+              Text(
+                "\Ar ${widget.model?.price ?? '00.0'}",
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w500,
+                  fontSize: isLargeTextMode ? 20.sp : 14.sp,
+                  color: Theme.of(context).textTheme.bodyText1?.color,
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: 5.h),
-          Text("${Constants.description.substring(0, 350)}",
-              style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w300,
-                  fontSize: 12.sp,
-                  height: 1.4,
-                  color: Colors.black54)),
-        ]);
+        SizedBox(height: 20.h),
+        Text(
+          'A propos de ${widget.model?.name.split(" ")[0] ?? 'Mentor'}',
+          style: TextStyle(
+            fontSize: isLargeTextMode ? 31.sp : 25.sp,
+            fontWeight: FontWeight.w500,
+            height: 1.3,
+            fontFamily: "Jersey",
+          ),
+        ),
+        SizedBox(height: 5.h),
+        Text(
+          widget.model?.details.propos ?? '',
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w300,
+            fontSize: isLargeTextMode ? 18.sp : 12.sp,
+            height: 1.4,
+            color: Theme.of(context).textTheme.bodyText1?.color,
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _achivment() {
+    final accomplishments = widget.model?.details.accomplissement ?? '';
+    final parsedAccomplishments = _parseAccomplishments(accomplishments);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Text(
           'Accomplissements',
           style: TextStyle(
-              fontSize: 25.sp,
+              fontSize: isLargeTextMode ? 31.sp : 25.sp,
               fontWeight: FontWeight.w500,
               height: 1.3,
               fontFamily: "Jersey"),
         ),
         SizedBox(height: 16.h),
-        _achivmentCard(),
-        SizedBox(height: 16.h),
-        _achivmentCard(),
+        for (int i = 0; i < parsedAccomplishments.length && i < 2; i++)
+          _achivmentCard(
+            parsedAccomplishments[i]['title']!,
+            parsedAccomplishments[i]['description']!,
+          ),
         SizedBox(height: 16.h),
       ],
     );
   }
 
-  Widget _achivmentCard() {
+  Widget _achivmentCard(String title, String description) {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 12.w),
       decoration: BoxDecoration(
@@ -233,13 +585,19 @@ class _ProfilePageState extends State<ProfilePage> {
             width: 40.w,
             alignment: Alignment.center,
             child: Icon(Icons.star_outline_rounded,
-                color: MColor.yellow, size: 20.sp)),
-        title: Text("Supported 100+ startups",
+                color: MColor.yellow, size: isLargeTextMode ? 28.sp : 20.sp)),
+        title: Text(title,
             style: GoogleFonts.inter(
-                fontWeight: FontWeight.w600, fontSize: 15.sp)),
-        subtitle: Text(Constants.description.substring(0, 90),
+              fontWeight: FontWeight.w600,
+              fontSize: isLargeTextMode ? 23.sp : 15.sp,
+              color: Theme.of(context).textTheme.bodyText1?.color,
+            )),
+        subtitle: Text(description,
             style: GoogleFonts.inter(
-                fontWeight: FontWeight.w400, fontSize: 12.sp)),
+              fontWeight: FontWeight.w400,
+              fontSize: isLargeTextMode ? 20.sp : 12.sp,
+              color: Theme.of(context).textTheme.bodyText1?.color,
+            )),
       ),
     );
   }
@@ -247,22 +605,29 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _button() {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: const Color.fromARGB(255, 30, 126, 205),
+        backgroundColor: const Color.fromARGB(255, 19, 75, 120),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20.r),
         ),
       ),
-      onPressed: () {},
+      onPressed: () {
+        isRequestAvailable
+            ? SendDemandeMentoring(
+                idUserDmd, reason, widget.model!.details.contact)
+            : null;
+      },
       child: Container(
         height: 40.h,
         alignment: Alignment.center,
         child: Text(
-          "Demander Mentoring",
-          style: GoogleFonts.inter(
-            color: const Color.fromARGB(255, 255, 255, 255),
-            fontWeight: FontWeight.w500,
-            fontSize: 16.sp,
-          ),
+          isRequestAvailable
+              ? 'Demander Mentoring'
+              : 'Disponible dans 24 heures',
+          style: TextStyle(
+              fontFamily: 'Jersey',
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+              fontSize: isLargeTextMode ? 30.sp : 22.sp),
         ),
       ),
     );

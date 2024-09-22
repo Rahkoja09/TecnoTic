@@ -94,4 +94,6 @@ class AppTheme {
     letterSpacing: 0.2,
     color: lightText, // was lightText
   );
+
+  static cardDescStyle(BuildContext context) {}
 }

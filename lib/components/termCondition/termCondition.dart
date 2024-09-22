@@ -1,6 +1,11 @@
 // ignore_for_file: avoid_print
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
+import 'package:ticeo/components/Theme/ThemeProvider.dart';
+import 'package:ticeo/components/database_gest/database_helper.dart';
 
 class Termscreen extends StatefulWidget {
   const Termscreen({super.key});
@@ -10,40 +15,141 @@ class Termscreen extends StatefulWidget {
 }
 
 class _TermscreenState extends State<Termscreen> {
+  String pourquoiTermCondition = '';
+  String nosTermes = '';
+  String nosConditions = '';
+  bool isLargeTextMode = false;
+
+  Future<void> _loadPreferences() async {
+    final mode = await DatabaseHelper().getPreference();
+    setState(() {
+      isLargeTextMode = mode == 'largePolice';
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+    _fetchTermsAndConditions();
+  }
+
+  Future<void> _fetchTermsAndConditions() async {
+    try {
+      QuerySnapshot snapshot =
+          await FirebaseFirestore.instance.collection('Terms&Conditions').get();
+
+      if (snapshot.docs.isNotEmpty) {
+        // Récupération du premier document
+        final data = snapshot.docs.first.data() as Map<String, dynamic>;
+        setState(() {
+          pourquoiTermCondition =
+              data['PourquoiTermeEtCondition'] ?? 'Aucun pourquoi disponible.';
+          nosTermes = data['NosTermes'] ?? 'Aucun terme disponible.';
+          nosConditions =
+              data['NosConditions'] ?? 'Aucun condition disponible.';
+        });
+      }
+    } catch (e) {
+      print('Erreur lors de la récupération des Terms & Conditions : $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Provider.of<ThemeProvider>(context).currentTheme;
     return SafeArea(
       child: Scaffold(
-          appBar: AppBar(
-            titleSpacing: 0.0,
-            title: const Text('Terms & Conditions'),
-            leading: IconButton(
-                onPressed: () => print('retour pressed'),
-                icon: const Icon(Icons.arrow_back)),
+        appBar: AppBar(
+          titleSpacing: 0.0,
+          title: Text(
+            'Termes et Conditions',
+            style: TextStyle(fontSize: 25.sp, fontWeight: FontWeight.w500),
           ),
-          body: const Padding(
-            padding: EdgeInsets.only(
-              left: 20.0,
-              right: 20.0,
-              bottom: 20.0,
+          leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back),
+          ),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 20.0),
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionHeader(
+                        icon: Icons.info_outline,
+                        title: 'Pourquoi Termes et Conditions ?',
+                      ),
+                      _buildSectionContent(pourquoiTermCondition),
+                      _buildSectionDivider(),
+                      _buildSectionHeader(
+                        icon: Icons.rule,
+                        title: 'Nos Termes',
+                      ),
+                      _buildSectionContent(nosTermes),
+                      _buildSectionDivider(),
+                      _buildSectionHeader(
+                        icon: Icons.gavel,
+                        title: 'Nos Conditions',
+                      ),
+                      _buildSectionContent(nosConditions),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader({required IconData icon, required String title}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 28, color: Colors.blueAccent),
+          const SizedBox(width: 10),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.bodyText1?.copyWith(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context)
+                      .textTheme
+                      .bodyText1
+                      ?.color, // Utilisation de la couleur du thème
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionContent(String content) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10.0),
+      child: Text(
+        content,
+        style: Theme.of(context).textTheme.bodyText1?.copyWith(
+              fontSize: 18,
+              color: Theme.of(context).textTheme.bodyText2?.color,
+              height: 1.5,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                    child: SingleChildScrollView(
-                        physics: AlwaysScrollableScrollPhysics(),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Text(
-                                "A l'ère de l'évolution technologique, l'informatique s'affirme comme un pilier essentiel du développement des entreprises, qu'elles soient grandes, moyennes ou plus modestes. Conçue pour répondre aux besoins humains, cette discipline englobe un éventail impressionnant de fonctions essentielles : enregistrer, stocker, traiter, organiser, transmettre et présenter l'information dans des formats faciles à utiliser. Par conséquent, l'informatique joue un rôle important pour surmonter les obstacles rencontrés par les entreprises, les guidant vers le succès et la prospérité. C'est dans ce contexte que s'est déroulé notre stage au Centre VALBIO de Ranomafana. Notre mission est de concevoir et réaliser une application de gestion spécifiquement destinée à la gestion des chercheurs, visiteurs scientifiques et étudiants internationaux de cette institution. Auparavant, le centre utilisait un système de gestion manuel basé sur une base de données Excel, ce qui entraînait des défis tels que la perte de données, la journalisation des erreurs et la complexité des procédures, La condition d’accès en première année de Master (M1) en S7 se fait par sélection  de dossier après l’obtention du diplôme de Licence en Administration Economique et Sociale,  en Gestion ou en Economie.La mention Management propose un parcours Management Décisionnel ayant pour  objectif de former et d’équiper les apprenants à la maîtrise des outils d’aide à la décision en  matière de management et de leur donner les compétences requises dans ce domaine. Comme  le management a besoin de se conformer en permanence aux diverses nouvelles exigences du  marché, l’enseignement doit alors toujours viser pour mettre à jour les connaissances de  l’apprenant par la formulation de programmes de cours qui tiennent compte de ces nouveautés.  Ainsi, les objectifs principaux peuvent se résumer à former des acteurs de haut niveau en  management décisionnel, de préparer des cadres capables de gérer et de créer un projet de  développement économique régional et national.  Les sortants peuvent travailler dans les secteurs privés et publics des différentes  régions de Madagascar en tant que chefs de conduite de travaux d’enquêtes communautaires,  concepteurs de projets, chefs de services ou directeurs d’entreprises. Dans ce cas, les étudiants  sortants sont capables de créer une petite entreprise, de monter un projet de développement  rural et de gérer un grand projet.  "),
-                          ],
-                        ))),
-              ],
-            ),
-          )),
+      ),
+    );
+  }
+
+  Widget _buildSectionDivider() {
+    return const Divider(
+      color: Colors.grey,
+      thickness: 1,
+      height: 40,
     );
   }
 }

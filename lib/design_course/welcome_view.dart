@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
+import 'package:ticeo/components/Theme/ThemeProvider.dart';
 import 'package:ticeo/components/database_gest/database_helper.dart';
 import 'package:ticeo/design_course/home_design_course.dart';
 import 'design_course_app_theme.dart';
@@ -54,7 +56,7 @@ class _HomePageState extends State<HomePage>
   Future<void> _loadPreferences() async {
     final mode = await DatabaseHelper().getPreference();
     setState(() {
-      _isLargeTextMode = mode == 'large';
+      _isLargeTextMode = mode == 'largePolice';
     });
   }
 
@@ -66,8 +68,9 @@ class _HomePageState extends State<HomePage>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Provider.of<ThemeProvider>(context).currentTheme;
     return Container(
-      color: DesignCourseAppTheme.nearlyWhite,
+      color: theme.scaffoldBackgroundColor,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Column(
@@ -103,25 +106,25 @@ class _HomePageState extends State<HomePage>
         children: <Widget>[
           _buildAnimatedInfoCard(
             "Modules",
-            "Certaines fonctionnalités de notre application, vous devez créer un compte en fournissant des informations exactes et complètes. Vous êtes responsable de la véracité de ces informations.",
+            "Les modules de formation sont des ensembles d'apprentissage divisés par thématique. Chaque module est conçu pour vous guider à travers des concepts spécifiques, de manière progressive, vous permettant de développer vos compétences à votre propre rythme.",
             const Color.fromARGB(97, 33, 149, 243),
             'assets/design_course/bcg1.jpg',
           ),
           _buildAnimatedInfoCard(
             "Séances",
-            "Certaines fonctionnalités de notre application, vous devez créer un compte en fournissant des informations exactes et complètes. Vous êtes responsable de la véracité de ces informations.",
+            "Les séances correspondent aux différentes sessions d'apprentissage disponibles dans chaque module. Vous pourrez participer à des cours interactifs et des exercices pratiques pour renforcer vos connaissances.",
             const Color.fromARGB(117, 155, 39, 176),
             'assets/design_course/bcg2.png',
           ),
           _buildAnimatedInfoCard(
             "Temps",
-            "Certaines fonctionnalités de notre application, vous devez créer un compte en fournissant des informations exactes et complètes. Vous êtes responsable de la véracité de ces informations.",
+            "Vous pouvez gérer votre temps d'apprentissage en fonction de votre emploi du temps. Consultez les horaires des séances et la durée estimée de chaque module afin de mieux planifier vos études.",
             const Color.fromARGB(119, 192, 107, 28),
             'assets/design_course/pp.jpg',
           ),
           _buildAnimatedInfoCard(
             "Mentorat",
-            "Certaines fonctionnalités de notre application, vous devez créer un compte en fournissant des informations exactes et complètes. Vous êtes responsable de la véracité de ces informations.",
+            "Le programme de mentorat vous permet de bénéficier de l'accompagnement personnalisé d'un mentor pour vous aider à atteindre vos objectifs d'apprentissage. Votre mentor pourra répondre à vos questions et vous offrir des conseils pratiques.",
             const Color.fromARGB(119, 96, 125, 139),
             'assets/design_course/bcg3.jpg',
           ),
@@ -138,7 +141,7 @@ class _HomePageState extends State<HomePage>
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 18, 117, 174),
+          color: const Color.fromARGB(255, 19, 75, 120),
           borderRadius: BorderRadius.circular(10.0),
         ),
         child: TextButton(
@@ -165,7 +168,7 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget getAppBarUI() {
-    double titleFontSize = _isLargeTextMode ? 32.sp : 34.sp;
+    double titleFontSize = _isLargeTextMode ? 32.sp : 32.sp;
     double subtitleFontSize = _isLargeTextMode ? 18.sp : 16.sp;
 
     return Padding(
@@ -179,15 +182,15 @@ class _HomePageState extends State<HomePage>
             child: FadeTransition(
               opacity: _fadeAnimation,
               child: Text(
-                'Bienvenue dans la section cour de TIC-eo',
+                'Bienvenue dans la section cours de Tecno-Tic',
                 textAlign: TextAlign.left,
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: titleFontSize,
-                  fontFamily: 'Jersey',
-                  letterSpacing: 0.27,
-                  color: const Color.fromARGB(255, 88, 89, 90),
-                ),
+                style: Theme.of(context).textTheme.bodyText1?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      fontSize: titleFontSize,
+                      fontFamily: 'Jersey',
+                      letterSpacing: 0.27,
+                      color: Theme.of(context).textTheme.bodyText1?.color,
+                    ),
               ),
             ),
           ),

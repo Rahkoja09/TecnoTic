@@ -42,13 +42,15 @@ class _CustomInputFieldState extends State<CustomInputField> {
 
   Future<void> _loadPreferences() async {
     final mode = await DatabaseHelper().getPreference();
-    setState(() {
-      _fontSize = mode == 'large' ? 24.sp : 18.sp;
-      _hintSize = mode == 'large' ? 24.sp : 15.sp;
-      _maxHeight = mode == 'large' ? 44.sp : 33.sp;
-      _paddingHorizontal = mode == 'large' ? 22.w : 15.w;
-      _paddingVertical = mode == 'large' ? 12.h : 3.h;
-    });
+    if (mounted) {
+      setState(() {
+        _fontSize = mode == 'largePolice' ? 24.sp : 18.sp;
+        _hintSize = mode == 'largePolice' ? 22.sp : 15.sp;
+        _maxHeight = mode == 'largePolice' ? 44.sp : 33.sp;
+        _paddingHorizontal = mode == 'largePolice' ? 22.w : 15.w;
+        _paddingVertical = mode == 'largePolice' ? 12.h : 3.h;
+      });
+    }
   }
 
   @override
@@ -74,12 +76,16 @@ class _CustomInputFieldState extends State<CustomInputField> {
           TextFormField(
             controller: widget.controller,
             obscureText: widget.obscureText && _obscureText,
+            style: TextStyle(
+              fontSize: _fontSize,
+              color: Theme.of(context).textTheme.bodyText1?.color,
+            ),
             decoration: InputDecoration(
               isDense: widget.isDense ?? false,
               hintText: widget.hintText,
               hintStyle: TextStyle(
                 fontSize: _hintSize,
-                color: const Color.fromARGB(255, 73, 73, 73),
+                color: Color.fromARGB(255, 106, 106, 106),
               ),
               suffixIcon: widget.suffixIcon
                   ? IconButton(
@@ -87,7 +93,7 @@ class _CustomInputFieldState extends State<CustomInputField> {
                         _obscureText
                             ? Icons.remove_red_eye
                             : Icons.visibility_off_outlined,
-                        color: Colors.black54,
+                        color: Theme.of(context).textTheme.bodyText1?.color,
                       ),
                       onPressed: () {
                         setState(() {

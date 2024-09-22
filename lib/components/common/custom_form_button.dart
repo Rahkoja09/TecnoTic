@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ticeo/components/database_gest/database_helper.dart';
 
-class CustomFormButton extends StatelessWidget {
+class CustomFormButton extends StatefulWidget {
   final String innerText;
   final void Function()? onPressed;
 
@@ -13,51 +13,47 @@ class CustomFormButton extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    // Déclaration des variables pour les tailles et styles par défaut
-    double fontSize = 20.sp;
-    double buttonHeight = 50.h;
-    double borderRadius = 26.r;
+  _CustomFormButtonState createState() => _CustomFormButtonState();
+}
 
-    // Charger les préférences de taille de texte depuis la base de données
-    _loadPreferences().then((preferences) {
-      fontSize = preferences['fontSize']!;
-      buttonHeight = preferences['buttonHeight']!;
-      borderRadius = preferences['borderRadius']!;
+class _CustomFormButtonState extends State<CustomFormButton> {
+  bool _isLargeText = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    final mode = await DatabaseHelper().getPreference();
+    setState(() {
+      _isLargeText = mode == 'largePolice';
     });
+  }
 
+  @override
+  Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
 
     return Container(
       width: size.width * 0.8,
-      height: buttonHeight,
+      height: _isLargeText ? 60.h : 50.h,
       decoration: BoxDecoration(
         color: const Color(0xff233743),
-        borderRadius: BorderRadius.circular(borderRadius),
+        borderRadius: BorderRadius.circular(_isLargeText ? 30.r : 26.r),
       ),
       child: TextButton(
-        onPressed: onPressed,
+        onPressed: widget.onPressed,
         child: Text(
-          innerText,
+          widget.innerText,
           style: TextStyle(
             color: Colors.white,
-            fontSize: fontSize,
+            fontSize: _isLargeText ? 30.sp : 20.sp,
+            fontFamily: 'Jersey',
           ),
         ),
       ),
     );
-  }
-
-  Future<Map<String, double>> _loadPreferences() async {
-    final mode = await DatabaseHelper().getPreference();
-    double fontSize = mode == 'large' ? 32.sp : 20.sp;
-    double buttonHeight = mode == 'large' ? 62.h : 50.h;
-    double borderRadius = mode == 'large' ? 34.r : 26.r;
-
-    return {
-      'fontSize': fontSize,
-      'buttonHeight': buttonHeight,
-      'borderRadius': borderRadius,
-    };
   }
 }

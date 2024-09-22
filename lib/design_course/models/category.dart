@@ -54,7 +54,7 @@ class Category {
     } else if (title.toLowerCase().contains('mobile')) {
       return 'assets/design_course/mobile.jpg';
     } else if (title.toLowerCase().contains('internet')) {
-      return 'assets/design_course/internet.avif';
+      return 'assets/design_course/internet.jpg';
     } else if (title.toLowerCase().contains('braille')) {
       return 'assets/design_course/braille.jpg';
     } else {

@@ -3,12 +3,14 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class RelaxView extends StatelessWidget {
   final AnimationController animationController;
-  final double textSize; // Nouveau paramètre pour la taille du texte
+  final double textSize;
+  final double TietletextSize;
 
   const RelaxView({
     super.key,
     required this.animationController,
-    required this.textSize, // Ajouter le paramètre au constructeur
+    required this.textSize,
+    required this.TietletextSize,
   });
 
   @override
@@ -88,10 +90,10 @@ class RelaxView extends StatelessWidget {
                 child: Text(
                   "Cours",
                   style: TextStyle(
-                    fontSize: textSize
-                        .sp, // Utiliser textSize.sp pour ajuster la taille
-                    fontWeight: FontWeight.bold,
-                  ),
+                      fontSize: TietletextSize
+                          .sp, // Utiliser textSize.sp pour ajuster la taille
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Jersey'),
                 ),
               ),
               SlideTransition(
@@ -100,7 +102,7 @@ class RelaxView extends StatelessWidget {
                   padding: EdgeInsets.only(
                       left: 20.w, right: 20.w, top: 16.h, bottom: 16.h),
                   child: Text(
-                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore",
+                    "Ici on vous propos des cours sur les TIC, en plusieurs Modules. Attention! c'est gratuit",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         fontSize: textSize.sp), // Ajuster la taille du texte
