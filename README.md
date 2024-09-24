@@ -12,7 +12,7 @@ Nommé 'TECNO-TIC', l'application permet aux utilisateur de s'initié aux TICs.
 
 En tant que stagiaire unique dans la section maintenance de CNFPPSH, j'était à la fois : 
 * designer
-* developpeur frontEnd et BackEnd
+* developpeur FullStack
   
 -------------------- # --------------
 - Tech : Dart-Flutter
