@@ -16,8 +16,12 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:ticeo/components/Theme/ThemeProvider.dart';
 import 'package:ticeo/components/database_gest/database_helper.dart';
+import 'package:ticeo/components/nav_bar/bottom_navbar.dart';
 import 'package:uuid/uuid.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 class ChatUI extends StatelessWidget {
   const ChatUI({super.key});
@@ -41,6 +45,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final List<types.Message> _messages = [];
   types.User? _user;
   final _otherUser = const types.User(id: '12345'); // Utilisateur de test
+  bool _textSize = false;
 
   // Pour suivre les messages en cours de chargement
   final Set<String> _loadingMessages = {};
@@ -51,6 +56,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     _loadMessages();
+    _loadPreferences();
     loadidUser();
   }
 
@@ -60,13 +66,25 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
+  Future<void> _loadPreferences() async {
+    final mode = await DatabaseHelper().getPreference();
+    setState(() {
+      _textSize = mode == 'largePolice';
+    });
+  }
+
   Future<void> loadidUser() async {
     var infoUser = await DatabaseHelper().getUser();
     if (infoUser!.isNotEmpty) {
       id_user = infoUser.first['idFireBase'];
+      var name = infoUser.first['nom'].split(' ')[0];
+      if (infoUser.first['isMentor'] == 1) {
+        name = name + ' (Mentor)';
+      }
       setState(() {
         _user = types.User(
-          id: id_user, firstName: infoUser.first['nom'],
+          id: id_user,
+          firstName: name,
           imageUrl: infoUser.first['profileImageUrl'],
         );
       });
@@ -76,7 +94,7 @@ class _MyHomePageState extends State<MyHomePage> {
   // Charger les messages depuis Firestore
   void _loadMessages() {
     _messageSubscription = FirebaseFirestore.instance
-        .collection('messages')
+        .collection('Globalchat')
         .orderBy('createdAt', descending: true)
         .snapshots()
         .listen((snapshot) {
@@ -93,19 +111,17 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  // Ajouter un message localement et l'enregistrer dans Firestore
   void _addMessage(types.Message message) {
-    if (!mounted) return; // Vérifie si le widget est monté
+    if (!mounted) return;
 
     setState(() {
       _messages.insert(0, message);
     });
 
     // Enregistrer le message dans Firestore
-    FirebaseFirestore.instance.collection('messages').add(message.toJson());
+    FirebaseFirestore.instance.collection('Globalchat').add(message.toJson());
   }
 
-  // Gérer l'ouverture du menu des pièces jointes
   void _handleAttachmentPressed() {
     showModalBottomSheet<void>(
       context: context,
@@ -120,26 +136,20 @@ class _MyHomePageState extends State<MyHomePage> {
                   Navigator.pop(context);
                   _handleImageSelection();
                 },
-                child: const Align(
+                child: Align(
                   alignment: AlignmentDirectional.centerStart,
-                  child: Text('Photo'),
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _handleFileSelection();
-                },
-                child: const Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: Text('Fichier'),
+                  child: Text(
+                    'Photo',
+                    style: TextStyle(fontSize: _textSize ? 16.sp : 11.sp),
+                  ),
                 ),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Align(
+                child: Align(
                   alignment: AlignmentDirectional.centerStart,
-                  child: Text('Annuler'),
+                  child: Text('Annuler',
+                      style: TextStyle(fontSize: _textSize ? 16.sp : 11.sp)),
                 ),
               ),
             ],
@@ -149,7 +159,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  // Gérer la sélection de fichiers autres que les images
   void _handleFileSelection() async {
     final result = await FilePicker.platform.pickFiles(type: FileType.any);
 
@@ -168,6 +177,23 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  // Fonction de compression et redimensionnement de l'image
+  Future<File?> compressAndResizeImage(File file,
+      {int quality = 70, int minWidth = 800, int minHeight = 800}) async {
+    final dir = await getTemporaryDirectory();
+    final targetPath = '${dir.absolute.path}/${Uuid().v4()}.jpg';
+
+    var result = await FlutterImageCompress.compressAndGetFile(
+      file.absolute.path,
+      targetPath,
+      quality: quality,
+      minWidth: minWidth,
+      minHeight: minHeight,
+    );
+
+    return result;
+  }
+
   // Gérer la sélection d'images et l'upload vers Firebase Storage
   void _handleImageSelection() async {
     final result = await ImagePicker().pickImage(
@@ -177,46 +203,50 @@ class _MyHomePageState extends State<MyHomePage> {
     );
 
     if (result != null) {
-      setState(() {
-        _loadingMessages.add(result.path);
-      });
+      File imageFile = File(result.path);
+      File? compressedImage = await compressAndResizeImage(imageFile);
 
-      try {
-        final bytes = await result.readAsBytes();
-        final image = await decodeImageFromList(bytes);
+      if (compressedImage != null) {
+        setState(() {
+          _loadingMessages.add(compressedImage.path);
+        });
 
-        // Upload de l'image sur Firebase Storage
-        final storageRef =
-            FirebaseStorage.instance.ref().child('uploads/${result.name}');
-        final uploadTask = storageRef.putFile(File(result.path));
-        final snapshot = await uploadTask;
-        final downloadUrl = await snapshot.ref.getDownloadURL();
+        try {
+          final bytes = await compressedImage.readAsBytes();
+          final image = await decodeImageFromList(bytes);
 
-        final message = types.ImageMessage(
-          author: _user!,
-          createdAt: DateTime.now().millisecondsSinceEpoch,
-          height: image.height.toDouble(),
-          id: const Uuid().v4(),
-          name: result.name,
-          size: bytes.length,
-          uri: downloadUrl,
-          width: image.width.toDouble(),
-        );
+          // Upload de l'image compressée sur Firebase Storage
+          final storageRef = FirebaseStorage.instance.ref().child(
+              'MediasGlobalMessage/${compressedImage.path.split('/').last}');
+          final uploadTask = storageRef.putFile(compressedImage);
+          final snapshot = await uploadTask;
+          final downloadUrl = await snapshot.ref.getDownloadURL();
 
-        _addMessage(message);
-      } catch (e) {
-        print('Erreur lors de l\'envoi de l\'image : $e');
-      } finally {
-        if (mounted) {
-          setState(() {
-            _loadingMessages.remove(result.path);
-          });
+          final message = types.ImageMessage(
+            author: _user!,
+            createdAt: DateTime.now().millisecondsSinceEpoch,
+            height: image.height.toDouble(),
+            id: const Uuid().v4(),
+            name: compressedImage.path.split('/').last,
+            size: bytes.length,
+            uri: downloadUrl,
+            width: image.width.toDouble(),
+          );
+
+          _addMessage(message);
+        } catch (e) {
+          print('Erreur lors de l\'envoi de l\'image : $e');
+        } finally {
+          if (mounted) {
+            setState(() {
+              _loadingMessages.remove(compressedImage.path);
+            });
+          }
         }
       }
     }
   }
 
-  // Gérer le tap sur un message pour ouvrir un fichier
   void _handleMessageTap(BuildContext _, types.Message message) async {
     if (message is types.FileMessage || message is types.ImageMessage) {
       String localPath;
@@ -293,7 +323,6 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  // Gérer l'envoi des messages texte
   void _handleSendPressed(types.PartialText message) {
     final textMessage = types.TextMessage(
       author: _user!,
@@ -305,60 +334,87 @@ class _MyHomePageState extends State<MyHomePage> {
     _addMessage(textMessage);
   }
 
-  // Construire les bulles de messages personnalisées
   Widget _bubbleBuilder(
     Widget child, {
-    debugShowCheckedModeBanner = false,
     required types.Message message,
     required bool nextMessageInGroup,
   }) {
     final isCurrentUser = message.author.id == _user?.id;
+    final theme = Provider.of<ThemeProvider>(context).currentTheme;
 
     return Align(
       alignment: isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Bubble(
-        child: child,
-        color: isCurrentUser
-            ? const Color(0xff6f61e8) // Couleur des messages envoyés
-            : const Color(0xfff5f5f7), // Couleur des messages reçus
-        margin: nextMessageInGroup
-            ? const BubbleEdges.symmetric(horizontal: 6)
-            : const BubbleEdges.only(top: 8, bottom: 8, left: 6, right: 6),
-        nip: nextMessageInGroup
-            ? BubbleNip.no
-            : isCurrentUser
-                ? BubbleNip.rightBottom
-                : BubbleNip.leftBottom,
-        alignment: isCurrentUser
-            ? Alignment.centerRight
-            : Alignment.centerLeft, // Aligner les bulles à droite ou à gauche
-        padding: const BubbleEdges.all(
-            10), // Ajouter du padding pour rendre la bulle plus agréable visuellement
+      child: Column(
+        crossAxisAlignment:
+            isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          if (message is types.TextMessage && message.author.firstName != null)
+            Text(
+              isCurrentUser ? 'Vous' : message.author.firstName!,
+              style: TextStyle(
+                fontSize: _textSize
+                    ? 16.sp
+                    : 11.sp, // Ajuster la taille en fonction de _textSize
+                color: Colors.grey,
+              ),
+            ),
+          Bubble(
+            margin: nextMessageInGroup
+                ? const BubbleEdges.symmetric(horizontal: 6)
+                : const BubbleEdges.only(top: 10),
+            nip: isCurrentUser
+                ? nextMessageInGroup
+                    ? BubbleNip.rightCenter
+                    : BubbleNip.rightBottom
+                : nextMessageInGroup
+                    ? BubbleNip.leftCenter
+                    : BubbleNip.leftBottom,
+            color: isCurrentUser ? Colors.blue : Colors.grey[200],
+            padding: const BubbleEdges.all(20),
+            child: message is types.TextMessage
+                ? Text(
+                    message.text, // Le texte du message
+                    style: TextStyle(
+                      fontSize: _textSize
+                          ? 24.sp // Taille de texte pour message plus grande
+                          : 14.sp, // Taille de texte pour message plus petite
+                      color: isCurrentUser
+                          ? Theme.of(context).textTheme.bodyText1?.color
+                          : Theme.of(context).textTheme.bodyText2?.color,
+                    ),
+                  )
+                : child, // Si c'est un autre type de message, utiliser child
+          ),
+        ],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Provider.of<ThemeProvider>(context).currentTheme;
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Color.fromARGB(114, 210, 144, 51),
+        backgroundColor: Color.fromARGB(255, 15, 68, 105),
         title: Row(
           children: [
-            Icon(Icons.chat),
+            Icon(
+              Icons.chat,
+              size: _textSize ? 30.sp : 20.sp,
+              color: Colors.white,
+            ),
             SizedBox(width: 10.h),
-            const Text(
+            Text(
               'Message global de Tecno-Tic',
-              style: TextStyle(fontFamily: 'Jersey'),
+              style: TextStyle(
+                fontFamily: 'Jersey',
+                fontSize: _textSize ? 30.sp : 20.sp,
+                color: Colors.white,
+              ),
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {},
-          ),
-        ],
       ),
       body: Stack(
         children: [
@@ -371,7 +427,14 @@ class _MyHomePageState extends State<MyHomePage> {
             user: _user!,
             bubbleBuilder: _bubbleBuilder,
             showUserAvatars: true,
-            showUserNames: true,
+            showUserNames: false,
+            theme: DefaultChatTheme(
+              backgroundColor: theme.scaffoldBackgroundColor,
+              inputBackgroundColor: const Color.fromARGB(255, 52, 52, 52),
+              messageBorderRadius: 10.0,
+              primaryColor: const Color.fromARGB(255, 25, 80, 125),
+              secondaryColor: Colors.grey[200]!,
+            ),
           ),
           if (_loadingMessages.isNotEmpty)
             Positioned(
@@ -380,7 +443,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.black54,
+                  color: const Color.fromARGB(137, 55, 55, 55),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Row(

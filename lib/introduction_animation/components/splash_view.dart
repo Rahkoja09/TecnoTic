@@ -73,7 +73,7 @@ class _SplashViewState extends State<SplashView> {
             Padding(
               padding: EdgeInsets.only(left: 24.w, right: 24.w),
               child: Text(
-                "Explorons la technologie avec Tecno-tic",
+                "Explorons ensemble la technologie",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     fontSize: widget.textSize.sp), // Ajuster la taille du texte

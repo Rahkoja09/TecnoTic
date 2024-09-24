@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ticeo/components/database_gest/database_helper.dart'; // Assurez-vous d'importer votre helper SQLite
 import 'package:audioplayers/audioplayers.dart';
+import 'package:ticeo/components/login_page.dart';
 import 'package:ticeo/components/signup_page.dart';
 
 class CenterNextButton extends StatefulWidget {
@@ -187,18 +188,28 @@ class _CenterNextButtonState extends State<CenterNextButton> {
                       Text(
                         'Déjà un compte? ',
                         style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: (adjustedTextSize - 2).sp,
-                            fontWeight: FontWeight.w500,
-                            fontFamily: 'Jersey'),
+                          color: Colors.grey,
+                          fontSize: (adjustedTextSize - 2).sp,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Jersey',
+                        ),
                       ),
-                      Text(
-                        'Se connecter',
-                        style: TextStyle(
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const LoginPage()));
+                        },
+                        child: Text(
+                          'Se connecter',
+                          style: TextStyle(
                             color: const Color(0xff132137),
                             fontSize: adjustedTextSize.sp,
                             fontWeight: FontWeight.w500,
-                            fontFamily: 'Jersey'),
+                            fontFamily: 'Jersey',
+                          ),
+                        ),
                       ),
                     ],
                   ),

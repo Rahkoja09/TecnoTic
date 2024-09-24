@@ -101,7 +101,7 @@ class WelcomeView extends StatelessWidget {
                     top: 16.h,
                     bottom: 6.h), // Responsive padding
                 child: Text(
-                  "Vers l'excelence Numerique",
+                  "Connectez, apprenez, avancez, ensemble vers un monde plein d'innovation",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: textSize.sp,

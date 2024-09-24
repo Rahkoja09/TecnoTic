@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -23,6 +24,7 @@ class GoogleBottomBar extends StatefulWidget {
 class _GoogleBottomBarState extends State<GoogleBottomBar> {
   int _selectedIndex = 0;
   bool isLargeTextMode = false;
+  DateTime? _lastPressed; // Pour suivre le dernier appui sur le bouton retour
 
   @override
   void initState() {
@@ -47,6 +49,22 @@ class _GoogleBottomBarState extends State<GoogleBottomBar> {
     });
   }
 
+  Future<bool> _onWillPop() async {
+    final now = DateTime.now();
+    const duration = Duration(seconds: 2);
+
+    if (_lastPressed == null || now.difference(_lastPressed!) > duration) {
+      // Premier appui, on affiche le message
+      _lastPressed = now;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Appuyez à nouveau pour quitter')),
+      );
+      return false; // Ne pas quitter l'application
+    }
+
+    return true; // Quitter l'application si deuxième appui rapide
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Provider.of<ThemeProvider>(context).currentTheme;
@@ -57,18 +75,20 @@ class _GoogleBottomBarState extends State<GoogleBottomBar> {
       ProfileScreen(),
     ];
 
-    return Scaffold(
-      body: screens[_selectedIndex],
-      backgroundColor: theme.scaffoldBackgroundColor,
-      bottomNavigationBar: SalomonBottomBar(
-        currentIndex: _selectedIndex,
-        selectedItemColor: const Color(0xff6200ee),
-        unselectedItemColor: const Color.fromARGB(255, 247, 247, 247),
-        onTap: (index) {
-          navigateTo(index);
-        },
-        items: _navBarItems(
-            isLargeTextMode, theme, context), // Passer isLargeTextMode ici
+    return WillPopScope(
+      onWillPop: _onWillPop, // Gérer l'événement "bouton retour"
+      child: Scaffold(
+        body: screens[_selectedIndex],
+        backgroundColor: theme.scaffoldBackgroundColor,
+        bottomNavigationBar: SalomonBottomBar(
+          currentIndex: _selectedIndex,
+          selectedItemColor: const Color(0xff6200ee),
+          unselectedItemColor: const Color.fromARGB(255, 247, 247, 247),
+          onTap: (index) {
+            navigateTo(index);
+          },
+          items: _navBarItems(isLargeTextMode, theme, context),
+        ),
       ),
     );
   }
@@ -138,6 +158,5 @@ List<SalomonBottomBarItem> _navBarItems(
       ),
       selectedColor: const Color.fromARGB(255, 106, 106, 106),
     ),
-    
   ];
 }

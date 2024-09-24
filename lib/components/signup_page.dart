@@ -4,11 +4,14 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:uuid/uuid.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:ticeo/components/Theme/ThemeProvider.dart';
 import 'package:ticeo/components/common/custom_form_button.dart';
 import 'package:ticeo/components/common/custom_input_field.dart';
@@ -55,6 +58,23 @@ class _SignupPageState extends State<SignupPage> {
     }
   }
 
+  // Fonction de compression et redimensionnement de l'image
+  Future<File?> compressAndResizeImage(File file,
+      {int quality = 70, int minWidth = 800, int minHeight = 800}) async {
+    final dir = await getTemporaryDirectory();
+    final targetPath = '${dir.absolute.path}/${Uuid().v4()}.jpg';
+
+    var result = await FlutterImageCompress.compressAndGetFile(
+      file.absolute.path,
+      targetPath,
+      quality: quality,
+      minWidth: minWidth,
+      minHeight: minHeight,
+    );
+
+    return result;
+  }
+
   Future<void> _loadPreferences() async {
     final mode = await DatabaseHelper().getPreference();
     setState(() {
@@ -67,7 +87,8 @@ class _SignupPageState extends State<SignupPage> {
       final image = await ImagePicker().pickImage(source: ImageSource.gallery);
       if (image == null) return;
 
-      final imageTemporary = File(image.path);
+      var imageTemporary = File(image.path);
+      imageTemporary = await compressAndResizeImage(imageTemporary) as File;
       setState(() => _profileImage = imageTemporary);
     } on PlatformException catch (e) {
       debugPrint('Erreur lors de la récupération d\'image: $e');

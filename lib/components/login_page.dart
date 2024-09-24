@@ -32,10 +32,13 @@ class _LoginPageState extends State<LoginPage> {
   final _loginFormKey = GlobalKey<FormState>();
   bool _textSize = false;
   bool _isLoading = false;
+  DateTime? _lastPressed;
 
   @override
   void initState() {
     super.initState();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
+        overlays: [SystemUiOverlay.bottom]);
     _loadPreferences();
   }
 
@@ -44,6 +47,22 @@ class _LoginPageState extends State<LoginPage> {
     setState(() {
       _textSize = mode == 'largePolice';
     });
+  }
+
+  Future<bool> _onWillPop() async {
+    final now = DateTime.now();
+    const duration = Duration(seconds: 2);
+
+    if (_lastPressed == null || now.difference(_lastPressed!) > duration) {
+      // Premier appui, on affiche le message
+      _lastPressed = now;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Appuyez à nouveau pour quitter')),
+      );
+      return false; // Ne pas quitter l'application
+    }
+
+    return true; // Quitter l'application si deuxième appui rapide
   }
 
   void createMentor() async {
@@ -61,148 +80,154 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Provider.of<ThemeProvider>(context).currentTheme;
+
     return SafeArea(
-      child: Scaffold(
-        backgroundColor: theme.scaffoldBackgroundColor,
-        body: _isLoading
-            ? LoadingWidget(
-                backgroundColor: Color.fromARGB(15, 52, 172, 205)
-                    .withOpacity(0.5)) // Ajustez l'opacité ici
-            : SingleChildScrollView(
-                child: Form(
-                  key: _loginFormKey,
-                  child: Column(
-                    children: [
-                      const PageHeader(),
-                      Container(
-                        decoration: BoxDecoration(
-                            color: theme.cardColor,
-                            borderRadius: BorderRadius.vertical(
-                              top: Radius.circular(20.w),
-                            ),
-                            border: const Border(
-                                top: BorderSide(
-                                    color: Color.fromARGB(255, 214, 134, 22)))),
-                        child: Column(
-                          children: [
-                            const PageHeading(
-                              title: 'Se connecter',
-                            ),
-                            CustomInputField(
-                              labelText: 'Email',
-                              hintText: 'Entrer votre email',
-                              controller: _emailController,
-                              validator: (textValue) {
-                                if (textValue == null || textValue.isEmpty) {
-                                  return 'Il faut entrer votre email!';
-                                }
-                                if (!EmailValidator.validate(textValue)) {
-                                  return 'Entrer une email valide';
-                                }
-                                return null;
-                              },
-                            ),
-                            CustomInputField(
-                              labelText: 'Mot de passe',
-                              hintText: 'Entrer votre mot de passe',
-                              obscureText: true,
-                              suffixIcon: true,
-                              controller: _passwordController,
-                              validator: (textValue) {
-                                if (textValue == null || textValue.isEmpty) {
-                                  return 'Il faut entrer un mot de passe!';
-                                }
-                                return null;
-                              },
-                            ),
-                            SizedBox(
-                              height: 16.h,
-                            ),
-                            Container(
-                              width: MediaQuery.of(context).size.width * 0.80,
-                              alignment: Alignment.centerRight,
-                              child: GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const SignupPage(),
-                                    ),
-                                  );
-                                },
-                                child: Text(
-                                  'Mot de passe oublié?',
-                                  style: TextStyle(
-                                    color: Theme.of(context)
-                                        .textTheme
-                                        .bodyText1
-                                        ?.color,
-                                    fontSize: _textSize ? 24.sp : 18.sp,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+      child: WillPopScope(
+        onWillPop: _onWillPop,
+        child: Scaffold(
+          backgroundColor: theme.scaffoldBackgroundColor,
+          body: _isLoading
+              ? LoadingWidget(
+                  backgroundColor: Color.fromARGB(15, 52, 172, 205)
+                      .withOpacity(0.5)) // Ajustez l'opacité ici
+              : SingleChildScrollView(
+                  child: Form(
+                    key: _loginFormKey,
+                    child: Column(
+                      children: [
+                        const PageHeader(),
+                        Container(
+                          decoration: BoxDecoration(
+                              color: theme.cardColor,
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(20.w),
                               ),
-                            ),
-                            SizedBox(
-                              height: 20.h,
-                            ),
-                            CustomFormButton(
-                              innerText: 'Se connecter',
-                              onPressed: _handleLoginUser,
-                            ),
-                            SizedBox(
-                              height: 18.h,
-                            ),
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.8,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Pas de compte ? ',
+                              border: const Border(
+                                  top: BorderSide(
+                                      color:
+                                          Color.fromARGB(255, 214, 134, 22)))),
+                          child: Column(
+                            children: [
+                              const PageHeading(
+                                title: 'Se connecter',
+                              ),
+                              CustomInputField(
+                                labelText: 'Email',
+                                hintText: 'Entrer votre email',
+                                controller: _emailController,
+                                validator: (textValue) {
+                                  if (textValue == null || textValue.isEmpty) {
+                                    return 'Il faut entrer votre email!';
+                                  }
+                                  if (!EmailValidator.validate(textValue)) {
+                                    return 'Entrer une email valide';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              CustomInputField(
+                                labelText: 'Mot de passe',
+                                hintText: 'Entrer votre mot de passe',
+                                obscureText: true,
+                                suffixIcon: true,
+                                controller: _passwordController,
+                                validator: (textValue) {
+                                  if (textValue == null || textValue.isEmpty) {
+                                    return 'Il faut entrer un mot de passe!';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              SizedBox(
+                                height: 16.h,
+                              ),
+                              Container(
+                                width: MediaQuery.of(context).size.width * 0.80,
+                                alignment: Alignment.centerRight,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const SignupPage(),
+                                      ),
+                                    );
+                                  },
+                                  child: Text(
+                                    'Mot de passe oublié?',
                                     style: TextStyle(
-                                      fontSize: _textSize ? 30.sp : 14.sp,
                                       color: Theme.of(context)
                                           .textTheme
                                           .bodyText1
                                           ?.color,
-                                      fontWeight: FontWeight.w500,
+                                      fontSize: _textSize ? 24.sp : 18.sp,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => SignupPage(),
-                                        ),
-                                      );
-                                    },
-                                    child: Text(
-                                      'Créer un compte',
-                                      style: TextStyle(
-                                          fontSize: _textSize ? 30.sp : 22.sp,
-                                          color: Theme.of(context)
-                                              .textTheme
-                                              .bodyText1
-                                              ?.color,
-                                          fontWeight: FontWeight.w500,
-                                          fontFamily: 'Jersey'),
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
-                            ),
-                            SizedBox(
-                              height: 20.h,
-                            ),
-                          ],
+                              SizedBox(
+                                height: 20.h,
+                              ),
+                              CustomFormButton(
+                                innerText: 'Se connecter',
+                                onPressed: _handleLoginUser,
+                              ),
+                              SizedBox(
+                                height: 18.h,
+                              ),
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.8,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'Pas de compte ? ',
+                                      style: TextStyle(
+                                        fontSize: _textSize ? 30.sp : 14.sp,
+                                        color: Theme.of(context)
+                                            .textTheme
+                                            .bodyText1
+                                            ?.color,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => SignupPage(),
+                                          ),
+                                        );
+                                      },
+                                      child: Text(
+                                        'Créer un compte',
+                                        style: TextStyle(
+                                            fontSize: _textSize ? 30.sp : 22.sp,
+                                            color: Theme.of(context)
+                                                .textTheme
+                                                .bodyText1
+                                                ?.color,
+                                            fontWeight: FontWeight.w500,
+                                            fontFamily: 'Jersey'),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(
+                                height: 20.h,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
+        ),
       ),
     );
   }

@@ -41,31 +41,102 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _checkMentoringRequestAvailability() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    // Récupérer la date de la dernière demande
-    String? lastRequestDate = prefs.getString('lastMentorRequestDate');
+    try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      var userInfo = await DatabaseHelper().getUser();
 
-    DateTime now = DateTime.now();
-    DateTime nextMidnight = DateTime(now.year, now.month, now.day + 1);
+      if (currentUser != null && userInfo!.isNotEmpty) {
+        String idUser = userInfo.first['idFireBase'];
+        DocumentReference userDocRef =
+            FirebaseFirestore.instance.collection('Utilisateurs').doc(idUser);
 
-    if (lastRequestDate == null) {
-      setState(() {
-        isRequestAvailable = true;
-      });
-      return;
+        DocumentSnapshot userSnapshot = await userDocRef.get();
+
+        if (userSnapshot.exists) {
+          Map<String, dynamic> userData =
+              userSnapshot.data() as Map<String, dynamic>;
+
+          DateTime lastRequestDate =
+              userData['lastRequestDate']?.toDate() ?? DateTime(2000);
+          int requestsToday = userData['requestsToday'] ?? 0;
+
+          DateTime today = DateTime.now();
+          DateTime todayMidnight = DateTime(today.year, today.month, today.day);
+          DateTime nextDay = todayMidnight.add(const Duration(days: 1));
+
+          // Check if last request was before today
+          if (lastRequestDate.isBefore(todayMidnight)) {
+            // Reset request count and update last request date
+            await userDocRef.update({
+              'requestsToday': 0,
+              'lastRequestDate': todayMidnight,
+            });
+            setState(() {
+              isRequestAvailable = true;
+            });
+          } else if (requestsToday < 5) {
+            // Requests are still available
+            setState(() {
+              isRequestAvailable = true;
+            });
+          } else {
+            // No requests available until the next day
+            setState(() {
+              isRequestAvailable = false;
+            });
+          }
+        } else {
+          // If no user document exists, create it with initial values
+          await userDocRef.set({
+            'requestsToday': 0,
+            'lastRequestDate': DateTime(2000), // Default old date
+          });
+          setState(() {
+            isRequestAvailable = true;
+          });
+        }
+      }
+    } catch (e) {
+      print("Error checking mentoring request availability: $e");
     }
+  }
 
-    DateTime lastRequestDateTime = DateTime.parse(lastRequestDate);
-
-    if (lastRequestDateTime.isBefore(nextMidnight)) {
-      setState(() {
-        isRequestAvailable = false;
-      });
-    } else {
-      setState(() {
-        isRequestAvailable = true;
-      });
-    }
+  Future<void> _showConfirmationDialog(BuildContext context, String idUserDmd,
+      String reason, String contact) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible:
+          false, // L'utilisateur doit appuyer sur un bouton pour fermer
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirmation'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(
+                    'Voulez-vous vraiment envoyer cette demande de mentorat ?'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Annuler'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Ferme la boîte de dialogue
+              },
+            ),
+            TextButton(
+              child: Text('Confirmer'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Ferme la boîte de dialogue
+                SendDemandeMentoring(
+                    idUserDmd, reason, widget.model!.details.contact);
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _initializeData() async {
@@ -214,6 +285,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> SendDemandeMentoring(
       String idUserDmd, String reason, String contact) async {
     if (!isRequestAvailable) return;
+
     try {
       // Récupérer le nom de l'utilisateur à partir de son idFirebase
       DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
@@ -224,6 +296,11 @@ class _ProfilePageState extends State<ProfilePage> {
         print("Utilisateur introuvable");
         return;
       }
+
+      // Récupérer les données de l'utilisateur
+      String nameUserDemande = userSnapshot['NomUtil'];
+      String contactUserDemande = userSnapshot['TelUtil'];
+      String UrlPhotoUser = userSnapshot['ProfileImageUrl'];
 
       // Rechercher le mentor correspondant au contact donné dans la collection 'Mentors'
       QuerySnapshot mentorQuery = await FirebaseFirestore.instance
@@ -276,14 +353,19 @@ class _ProfilePageState extends State<ProfilePage> {
       // Mettre à jour le document avec la nouvelle notification
       await mentorRef.update({'Notifications': notifications});
 
-      // Enregistrer l'heure de la demande
+      // Enregistrer l'heure de la demande dans SharedPreferences
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString(
           'lastMentorRequestDate', DateTime.now().toIso8601String());
 
+      // Mettre à jour l'état pour indiquer que la demande n'est plus disponible
       setState(() {
         isRequestAvailable = false;
       });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Demande de mentorat envoyée avec succès !')),
+      );
 
       print("Notification ajoutée avec succès !");
     } catch (e) {
@@ -611,18 +693,14 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ),
       onPressed: () {
-        isRequestAvailable
-            ? SendDemandeMentoring(
-                idUserDmd, reason, widget.model!.details.contact)
-            : null;
+        _showConfirmationDialog(
+            context, idUserDmd, reason, widget.model!.details.contact);
       },
       child: Container(
         height: 40.h,
         alignment: Alignment.center,
         child: Text(
-          isRequestAvailable
-              ? 'Demander Mentoring'
-              : 'Disponible dans 24 heures',
+          'Demander Mentoring',
           style: TextStyle(
               fontFamily: 'Jersey',
               color: Colors.white,
