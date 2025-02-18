@@ -2,7 +2,7 @@ TECNOTIC
 Une application mobile de cours et de mentorat
 - Adapter aux personnes en situation de Handicap (60%)
 
-# screen shot app
+# screenshot of app
 ![Screenshot_20240923-100930](https://github.com/user-attachments/assets/ea4ff70f-b58b-461c-8e9d-083c54395b21)
 ![Screenshot_20240923-065120](https://github.com/user-attachments/assets/f7407271-7fb2-482d-af21-9955075f32ae)
 ![Screenshot_20240923-065055](https://github.com/user-attachments/assets/1ffd2892-9ce9-4dfd-9e35-b831ef6cfa96)
